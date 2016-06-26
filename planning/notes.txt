@@ -1,0 +1,77 @@
+- GUI
+  - expandable card boxes (collapsed is mainly just name)
+- rules
+  - discard hand at start of turn
+  - draw five cards
+  - max hand size five cards
+  - summoning sickness
+  - before shuffle remove any cards
+  - some cards can only be removed through special actions or attacking
+  - unblocked attacks can target own discard or opponent's draw
+  - mindsets only have one ability, which might be to attack
+  - power is used for attack and defense and others
+  - no max/neutral power
+  - destroyed tools get removed from deck
+  - all tools are passive
+  - one task at a time attached to each protagonist
+- cards
+  - 1 mana (Glimmer of hope)
+  - 1/1 creature (Go for it)
+  - null (Ennui)
+  - 1 mana, 1 draw
+  - sac creature for mana
+  - get creature into play
+  - re-play an old mana
+  - remove discarded card for mana
+- base attributes
+  - play cost
+  - buy cost
+  - power
+- effects
+  - haste
+  - untap
+  - counter
+  - reaction
+  - global reduce cost
+- card types
+  - recipe
+    - Rainbow cupcake
+  - task
+    - Mix
+    - Put batter to tray
+    - Bake
+  - ingredient
+    - Flour
+    - Eggs
+    - Sugar
+  - tool
+    - Radio
+    - Glass mixing bowl
+  - mindset
+    - Go for it
+    - Don't give up
+    - It gets better
+    - Growth mindset
+    - Burnout
+    - Drive to succeed
+    - Overachievement
+    - Gratitude
+    - Polish your strengths
+      - upgrade cards
+    - Be proud of who you are
+    - People are mean
+    - Slack
+    - Baking is fun
+  - mindset (negative)
+    - God hates faggots
+    - Baking is for sissies
+  - feeling / thought
+    - Glimmer of hope
+    - Ray of hope
+    - Good luck
+    - Shake it off
+    - Glee
+    - Anger
+    - Rightous fury
+    - Headroom
+    - Self-distraction
