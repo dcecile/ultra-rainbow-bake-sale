@@ -13,16 +13,21 @@
   - no max/neutral power
   - destroyed tools get removed from deck
   - all tools are passive
-  - one task at a time attached to each protagonist
+  - each protagonist can tackle one task per turn (cost/effectiveness varies with experience/mood/interest)
+  - tasks: prep (measuring, chopping), mix (dry, wet, frosting), bake (pour batter, stop needs to be timed correctly and checked), decorate (apply), cleanup
+  - task points become available incrementally pipeline like start baking before prep frosting
+  - play recipe modifiers (get locked in at start of recipe)
+  - play 'add batch' to allow increased workload/payoff (batch size locked in at start of recipe)
 - cards
   - 1 mana (Glimmer of hope)
   - 1/1 creature (Go for it)
-  - null (Ennui)
+  - null (Ennui / Calm)
   - 1 mana, 1 draw
   - sac creature for mana
   - get creature into play
   - re-play an old mana
   - remove discarded card for mana
+  - duplicate a card (pay fixed mana, discard all 3)
 - base attributes
   - play cost
   - buy cost

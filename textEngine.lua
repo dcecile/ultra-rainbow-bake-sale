@@ -4,10 +4,10 @@ local textObjectCache = {}
 
 local fontLoader = {
   big = function ()
-    return love.graphics.newFont(24)
+    return love.graphics.newFont('RobotoCondensed-Light.ttf', 26)
   end,
   title = function ()
-    return love.graphics.newFont(48)
+    return love.graphics.newFont('RobotoCondensed-Regular.ttf', 48)
   end,
 }
 
@@ -34,12 +34,17 @@ local function getTextObject(fontName, text)
   end
 end
 
-local function draw(fontName, text, x, y)
-  textObject = getTextObject(fontName, text)
-  love.graphics.draw(textObject, x, y)
+local function paintTextObject(textObject, x, y)
+  love.graphics.draw(textObject, x - 0.5, y - 0.5)
+end
+
+local function paint(fontName, text, x, y)
+  local textObject = getTextObject(fontName, text)
+  paintTextObject(textObject, x, y)
 end
 
 return {
   getTextObject = getTextObject,
-  draw = draw
+  paintTextObject = paintTextObject,
+  paint = paint,
 }

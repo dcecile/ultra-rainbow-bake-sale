@@ -1,8 +1,12 @@
-Restart button
-Music volume
-Buy/play cost
-Window size
-
-You're not alone
-It gets better
-Ennui
+Bake task
+Card UI refactoring
+Differentiated players
+Bake stages
+Clean up task
+Burnt cupcakes task
+Cleanup fee
+Mix task
+Prep task
+Decorate task
+Clearer end-game condition
+Cupcake baking reward visuals

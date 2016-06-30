@@ -9,15 +9,20 @@ credits = nil
 extraScreens.introScreen.gameScreen = game.screen
 
 currentScreen = extraScreens.titleScreen
---extraScreens.titleScreen.mute = true
---currentScreen = game.screen
+extraScreens.titleScreen.mute = true
+currentScreen = game.screen
+game.screen:start()
 
 function love.load()
-  love.window.setMode(0, 0, { msaa = 8 })
+  love.window.setTitle('Ultra Rainbow Bake Sale')
+  love.window.setMode(1010, 1010, { resizable = true, msaa = 8 })
   bigFont = love.graphics.newFont(24)
   music = love.audio.newSource('bensound-anewbeginning.mp3')
+  music:setVolume(0.3)
   music:setLooping(true)
   credits = love.filesystem.read('credits.txt')
+  love.graphics.setLineWidth(1)
+  love.graphics.setLineStyle('rough')
 end
 
 function love.keypressed(key, isrepeat)
@@ -31,5 +36,7 @@ function love.mousepressed(x, y, button, istouch)
 end
 
 function love.draw()
-  currentScreen:draw()
+  love.graphics.origin()
+  love.graphics.translate(0.5, 0.5)
+  currentScreen:paint()
 end
