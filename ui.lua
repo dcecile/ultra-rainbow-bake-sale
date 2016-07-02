@@ -1,16 +1,46 @@
 local proto = require('proto')
 local textEngine = require('textEngine')
 
+local cursor = proto.object:extend({
+  isTargeting = false,
+  isClickable = false,
+  clear = function (self)
+    self.isClickable = false
+    self:refresh()
+  end,
+  clickable = function (self)
+    self.isClickable = true
+    self:refresh()
+  end,
+  startTargeting = function (self)
+    self.isTargeting = true
+    self:refresh()
+  end,
+  stopTargeting = function (self)
+    self.isTargeting = false
+    self:refresh()
+  end,
+  refresh = function (self)
+    if self.isTargeting then
+      love.mouse.setCursor(love.mouse.getSystemCursor('crosshair'))
+    elseif self.isClickable then
+      love.mouse.setCursor(love.mouse.getSystemCursor('hand'))
+    else
+      love.mouse.setCursor()
+    end
+  end,
+})
+
 local targeting = proto.object:extend({
   from = nil,
   selected = {},
   continue = false,
   set = function (self, from)
-    love.mouse.setCursor(love.mouse.getSystemCursor('crosshair'))
+    cursor:startTargeting()
     self.from = from
   end,
   reset = function (self)
-    love.mouse.setCursor()
+    cursor:stopTargeting()
     self.from = nil
     self.selected = {}
     self.continue = false
@@ -45,26 +75,40 @@ local rectangle = proto.object:extend({
       love.graphics.rectangle('line', self.left, self.top, self.width, self.height)
     end
   end,
-  mousepressed = function (self, x, y, button, istouch)
+  isInside = function (self, x, y)
     if self.left <= x and x < self.left + self.width then
       if self.top <= y and y < self.top + self.height then
-        if targeting.from then
-          if targeting.from.isTargetable(self) then
-            targeting.from.target(self)
-          end
-        else
-          self:clicked()
+        return true
+      end
+    end
+    return false
+  end,
+  isClickable = function (self)
+    return self.clicked ~= nil
+  end,
+  checkHover = function (self, x, y)
+    if self:isClickable() and self:isInside(x, y) then
+      cursor:clickable()
+    end
+  end,
+  mousepressed = function (self, x, y, button, istouch)
+    if self:isInside(x, y) then
+      if targeting.from then
+        if targeting.from.isTargetable(self) then
+          targeting.from.target(self)
         end
+      elseif self:isClickable() then
+        self:clicked()
       end
     end
   end,
-  clicked = function (self)
-  end
 })
 
 local spacer = proto.object:extend({
   refresh = function (self)
     self.height = self.margin[2] * 2 + 1
+  end,
+  checkHover = function (self, x, y)
   end,
   paint = function (self)
     love.graphics.setColor(self.color)
@@ -101,6 +145,11 @@ local column = proto.object:extend({
     end
     self.height = math.max(self.minHeight, nextTop - self.top - self.margin)
   end,
+  checkHover = function (self, x, y)
+    for i, card in ipairs(self.cards) do
+      card:checkHover(x, y)
+    end
+  end,
   paint = function (self)
     for i, card in ipairs(self.cards) do
       card:paint()
@@ -128,6 +177,7 @@ local column = proto.object:extend({
 })
 
 return {
+  cursor = cursor,
   targeting = targeting,
   rectangle = rectangle,
   card = card,

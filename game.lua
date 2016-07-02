@@ -75,7 +75,7 @@ local styledBoxCard = boxCard:extend({
   selectedHighlightColor = colors.selectedHighlightColor,
   selectedBorderColor = colors.selectedBorderColor,
   untargetableColor = colors.untargetableColor,
-  width = 330,
+  width = 300,
   height = 50,
   margin = { 13, 12 },
   font = 'big',
@@ -205,6 +205,79 @@ local cupcakes = styledBoxCard:extend({
   end,
 })
 
+local bakeCupcakes = styledBoxCard:extend({
+  text = 'Bake some cupcakes',
+  borderColor = colors.cupcakes.foreground,
+  runCost = 10,
+  refresh = function (self)
+    if hope.value >= self.runCost then
+      self.boxColors = colors.hope
+      self.textColor = colors.cupcakes.foreground
+    else
+      self.boxColors = colors.hopeDisabled
+      self.textColor = colors.disabledText
+    end
+  end,
+  getBoxColors = function (self)
+    return self.boxColors
+  end,
+  getBoxValue = function (self)
+    return self.runCost
+  end,
+  run = function (self)
+    cupcakes.value = cupcakes.value + 12
+  end,
+})
+
+local kitchen = styledColumn:extend({
+  cards = {
+    bakeCupcakes,
+  }
+})
+
+local playerCard = styledBoxCard:extend({
+  value = 0,
+  busy = false,
+  refresh = function (self)
+    if self:isClickable() then
+      self.textColor = colors.player.foreground
+    else
+      self.textColor = colors.disabledText
+    end
+  end,
+  getBoxColors = function (self)
+    return colors.player
+  end,
+  getBoxValue = function (self)
+    return self.value
+  end,
+  clicked = function (self)
+    ui.targeting:set({
+      isTargetable = function (card)
+        return card.runCost and hope.value >= card.runCost
+      end,
+      target = function (card)
+        hope:pay(card.runCost)
+        card:run()
+        self.value = self.value + 1
+        self.busy = true
+        ui.targeting:reset()
+      end,
+    })
+  end,
+  isClickable = function (self)
+    return not self.busy and hope.value >= bakeCupcakes.runCost
+  end,
+})
+
+local morgan = playerCard:extend({
+  text = 'Morgan',
+})
+
+local alex = playerCard:extend({
+  text = 'Alex',
+})
+
 local bankCard = styledBoxCard:extend({
   clicked = function (self)
     hope:tryPay(self.card.buyCost, function ()
@@ -219,13 +292,16 @@ local bankCard = styledBoxCard:extend({
     })
   end,
   refresh = function (self)
-    if hope.value >= self.card.buyCost then
+    if self:isClickable() then
       self.boxColors = colors.hope
       self.textColor = colors.hope.foreground
     else
       self.boxColors = colors.hopeDisabled
       self.textColor = colors.disabledText
     end
+  end,
+  isClickable = function (self)
+    return hope.value >= self.card.buyCost
   end,
   getBoxColors = function (self)
     return self.boxColors
@@ -239,13 +315,16 @@ local deckCard = styledBoxCard:extend({
   column = discardPile,
   clicked = function (self)
     local cost = self.cost
-    if self.action and not self.delay then
-      if hope.value >= cost then
-        self:action(function ()
-          hope:pay(cost)
-        end)
-      end
+    if self:isClickable() then
+      self:action(function ()
+        hope:pay(cost)
+      end)
     end
+  end,
+  isClickable = function (self)
+    return self.action
+      and not self.delay
+      and hope.value >= self.cost
   end,
   moveToDraw = function (self)
     self.column:remove(self)
@@ -352,17 +431,6 @@ local itGetsBetter = hopeMindset:extend({
   playCost = 4,
 })
 
-local bakeCupcakes = deckCard:extend({
-  text = 'Bake some cupcakes',
-  buyCost = 2,
-  playCost = 10,
-  play = function (self, pay)
-    cupcakes.value = cupcakes.value + 12
-    self:moveToDiscard()
-    pay()
-  end,
-})
-
 local ennui = deckCard:extend({
   text = 'Ennui',
   playCost = math.huge,
@@ -431,6 +499,8 @@ local function startTurn()
   for i, card in ipairs(mindset.cards) do
     card.delay = false
   end
+  morgan.busy = false
+  alex.busy = false
 end
 
 local endTurn = styledBoxCard:extend({
@@ -453,8 +523,21 @@ local endTurn = styledBoxCard:extend({
   end,
 })
 
-local mainColumn = styledColumn:extend({
+local bakingColumn = styledColumn:extend({
   left = 60,
+  top = 60,
+  cards = {
+    cupcakes,
+    styledSpacer:extend(),
+    morgan,
+    alex,
+    styledSpacer:extend(),
+    kitchen,
+  }
+})
+
+local mainColumn = styledColumn:extend({
+  left = bakingColumn.left + styledBoxCard.width + 70,
   top = 60,
   cards = {
     discardPile,
@@ -465,7 +548,6 @@ local mainColumn = styledColumn:extend({
     mindset,
     styledSpacer:extend(),
     endTurn,
-    cupcakes,
   }
 })
 
@@ -475,7 +557,6 @@ local bankColumn = styledColumn:extend({
   cards = {
     hope,
     styledSpacer:extend(),
-    bankCard:make(bakeCupcakes),
     bankCard:make(feelingOfHope),
     bankCard:make(visionOfHope),
     bankCard:make(mildCuriosity),
@@ -487,18 +568,26 @@ local bankColumn = styledColumn:extend({
 
 local screen = {
   color = colors.lightBackground,
-  shapes = { mainColumn, bankColumn },
-  paint = function (self)
-    love.graphics.setBackgroundColor(self.color)
+  shapes = { bakingColumn, mainColumn, bankColumn },
+  refresh = function (self)
+    local mouseX, mouseY = love.mouse.getPosition()
+    ui.cursor:clear()
     for i, shape in ipairs(self.shapes) do
       shape:refresh()
+      shape:checkHover(mouseX, mouseY)
+    end
+  end,
+  paint = function (self)
+    self:refresh()
+    love.graphics.setBackgroundColor(self.color)
+    for i, shape in ipairs(self.shapes) do
       shape:paint()
     end
   end,
   mousepressed = function (self, x, y, button, istouch)
+    self:refresh()
     local resetTargeting = ui.targeting.from ~= nil
     for i, shape in ipairs(self.shapes) do
-      shape:refresh()
       shape:mousepressed(x, y, button, istouch)
     end
     if resetTargeting and not ui.targeting.continue then
@@ -528,7 +617,7 @@ local screen = {
     local seed = love.timer.getTime()
     print('seed', seed)
     math.randomseed(seed)
-    mainColumn:refresh()
+    self:refresh()
     drawPile:shuffle()
     startTurn()
   end,

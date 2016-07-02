@@ -1,5 +1,8 @@
-Bake task
+Player bake once
+[Commit]
+Highlight active
 Card UI refactoring
+Comments
 Differentiated players
 Bake stages
 Clean up task

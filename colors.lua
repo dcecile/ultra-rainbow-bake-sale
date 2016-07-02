@@ -30,4 +30,8 @@ return {
     foreground = { 170, 50, 255 },
     background = { 246, 233, 255 },
   },
+  player = {
+    foreground = { 97, 153, 255 },
+    background = { 243, 246, 255 },
+  },
 }

@@ -5,17 +5,26 @@ local utils = require('utils')
 
 music = nil
 credits = nil
+local fullscreen = false
 
 extraScreens.introScreen.gameScreen = game.screen
 
 currentScreen = extraScreens.titleScreen
-extraScreens.titleScreen.mute = true
-currentScreen = game.screen
-game.screen:start()
+--extraScreens.titleScreen.mute = true
+--fullscreen = true
+--currentScreen = game.screen
+--game.screen:start()
 
 function love.load()
   love.window.setTitle('Ultra Rainbow Bake Sale')
-  love.window.setMode(1010, 1010, { resizable = true, msaa = 8 })
+  love.window.setMode(
+    1010,
+    1010,
+    {
+      resizable = true,
+      msaa = 8,
+      fullscreen = fullscreen,
+    })
   bigFont = love.graphics.newFont(24)
   music = love.audio.newSource('bensound-anewbeginning.mp3')
   music:setVolume(0.3)
