@@ -1,4 +1,5 @@
 local colors = require('colors')
+local rectangleEngine = require('rectangleEngine')
 local textEngine = require('textEngine')
 local ui = require('ui')
 
@@ -15,8 +16,8 @@ titleScreen = {
     local titleText = textEngine.getTextObject(
       'title', 
       'Ultra Rainbow Bake Sale')
-    love.graphics.setColor(colors.inverseText)
     textEngine.paintTextObject(
+        colors.inverseText,
         titleText,
         width / 2 - titleText:getWidth() / 2,
         height / 2 - titleText:getHeight() / 2)
@@ -30,7 +31,7 @@ titleScreen = {
   mute = false,
 }
 
-local function paintLines(lines)
+local function paintLines(color, lines)
     local separator = textEngine.getTextObject('big', '/')
     local margin = 22
     local separatorLeft = 267
@@ -43,9 +44,9 @@ local function paintLines(lines)
       local nameLeft = separatorLeft - margin - name:getWidth()
       local text = textEngine.getTextObject('big', line[2])
       local textLeft = separatorLeft + separator:getWidth() + margin
-      textEngine.paintTextObject(name, nameLeft, lineTop)
-      textEngine.paintTextObject(separator, separatorLeft, lineTop)
-      textEngine.paintTextObject(text, textLeft, lineTop)
+      textEngine.paintTextObject(color, name, nameLeft, lineTop)
+      textEngine.paintTextObject(color, separator, separatorLeft, lineTop)
+      textEngine.paintTextObject(color, text, textLeft, lineTop)
     end
 end
 
@@ -54,11 +55,10 @@ introScreen = {
     ui.cursor:clickable()
     love.graphics.setBackgroundColor(colors.darkBackground)
     local width, height = love.graphics.getDimensions()
-    love.graphics.setColor(colors.textBox)
-    love.graphics.rectangle('fill', 100.5, 100.5, width - 200, height - 200)
-    love.graphics.setColor(colors.inverseText)
+    rectangleEngine.paint(
+      colors.textBox, 100.5, 100.5, width - 200, height - 200)
 
-    paintLines({
+    paintLines(colors.inverseText, {
       { 'Alex', 'Who\'s idea was this anyways?' },
       { 'Morgan', 'Come on, love will always conquer hatred.' },
       { 'Alex', 'With baked goods? We\'ve never baked before.' },
@@ -80,10 +80,9 @@ doneScreen = {
     ui.cursor:clickable()
     love.graphics.setBackgroundColor(colors.lightBackground)
     local width, height = love.graphics.getDimensions()
-    love.graphics.setColor(colors.textBox)
-    love.graphics.rectangle('fill', 100.5, 100.5, width - 200, height - 200)
-    love.graphics.setColor(colors.inverseText)
-    paintLines({
+    rectangleEngine.paint(
+      colors.textBox, 100.5, 100.5, width - 200, height - 200)
+    paintLines(colors.inverseText, {
       { 'Morgan', 'We baked ' .. self.totalCupcakes .. ' cupcakes!' },
       { 'Alex', 'Great!' },
     })
@@ -133,8 +132,7 @@ creditsScreen = {
     self.buttons:checkHover(mouseX, mouseY)
 
     love.graphics.setBackgroundColor(colors.darkBackground)
-    love.graphics.setColor(colors.inverseText)
-    textEngine.paint('big', credits, 20, 20)
+    textEngine.paint(colors.inverseText, 'big', credits, 20, 20)
     self.buttons:paint()
   end,
   mousepressed = function (self, x, y, button, istouch)

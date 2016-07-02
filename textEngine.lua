@@ -34,13 +34,14 @@ local function getTextObject(fontName, text)
   end
 end
 
-local function paintTextObject(textObject, x, y)
-  love.graphics.draw(textObject, x - 0.5, y - 0.5)
+local function paintTextObject(color, textObject, x, y)
+  love.graphics.setColor(color)
+  love.graphics.draw(textObject, x, y)
 end
 
-local function paint(fontName, text, x, y)
+local function paint(color, fontName, text, x, y)
   local textObject = getTextObject(fontName, text)
-  paintTextObject(textObject, x, y)
+  paintTextObject(color, textObject, x, y)
 end
 
 return {

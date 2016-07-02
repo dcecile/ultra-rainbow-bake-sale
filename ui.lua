@@ -1,4 +1,5 @@
 local proto = require('proto')
+local rectangleEngine = require('rectangleEngine')
 local textEngine = require('textEngine')
 
 local cursor = proto.object:extend({
@@ -80,12 +81,10 @@ local rectangle = proto.object:extend({
   refresh = function (self)
   end,
   paint = function (self)
-    love.graphics.setColor(self.color)
-    love.graphics.rectangle('fill', self.left, self.top, self.width, self.height)
-    if self.borderColor then
-      love.graphics.setColor(self.borderColor)
-      love.graphics.rectangle('line', self.left, self.top, self.width, self.height)
-    end
+    rectangleEngine.paintPadded(
+      self.borderColor, self.left, self.top, self.width, self.height, 1)
+    rectangleEngine.paint(
+      self.color, self.left, self.top, self.width, self.height)
   end,
   isInside = function (self, x, y)
     if self.left <= x and x < self.left + self.width then
@@ -123,12 +122,12 @@ local spacer = proto.object:extend({
   checkHover = function (self, x, y)
   end,
   paint = function (self)
-    love.graphics.setColor(self.color)
-    love.graphics.line(
+    rectangleEngine.paint(
+      self.color,
       self.left + self.margin[1],
       self.top + self.margin[2],
-      self.left + self.width - self.margin[1],
-      self.top + self.margin[2])
+      self.width - self.margin[1] * 2,
+      1)
   end,
   mousepressed = function (self, x, y, button, istouch)
   end,
@@ -137,8 +136,8 @@ local spacer = proto.object:extend({
 local card = rectangle:extend({
   paint = function (self)
     rectangle.paint(self)
-    love.graphics.setColor(self.textColor)
     textEngine.paint(
+      self.textColor,
       self.font,
       self.text,
       self.left + self.margin[1],

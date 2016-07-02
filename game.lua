@@ -1,6 +1,7 @@
 local colors = require('colors')
 local extraScreens = require('extraScreens')
 local proto = require('proto')
+local rectangleEngine = require('rectangleEngine')
 local textEngine = require('textEngine')
 local ui = require('ui')
 
@@ -27,24 +28,17 @@ local boxCard = ui.card:extend({
     end
 
     if highlight then
-      love.graphics.setColor(self.highlightColor)
-      love.graphics.rectangle(
-        'fill',
-        self.left - 3 - 0.5,
-        self.top - 3 - 0.5,
-        self.width + 7,
-        self.height + 7)
+      rectangleEngine.paintPadded(
+        self.highlightColor, self.left, self.top, self.width, self.height, 3)
     end
 
-    love.graphics.setColor(color)
-    love.graphics.rectangle('fill', self.left, self.top, self.width, self.height)
-    if borderColor then
-      love.graphics.setColor(borderColor)
-      love.graphics.rectangle('line', self.left, self.top, self.width, self.height)
-    end
+    rectangleEngine.paintPadded(
+      borderColor, self.left, self.top, self.width, self.height, 1)
+    rectangleEngine.paint(
+      color, self.left, self.top, self.width, self.height)
 
-    love.graphics.setColor(self.textColor)
     textEngine.paint(
+      self.textColor,
       self.font,
       self.text,
       self.left + self.margin[1],
@@ -54,22 +48,13 @@ local boxCard = ui.card:extend({
     local boxValue = self:getBoxValue()
     local boxWidth = 50
     local boxLeft = self.left + self.width - boxWidth
-    love.graphics.setColor(boxColors.background)
-    love.graphics.rectangle(
-      'fill',
-      boxLeft + 1 - 0.5,
-      self.top + 1 - 0.5,
-      boxWidth - 1,
-      self.height - 1)
-    love.graphics.setColor(boxColors.foreground)
-    love.graphics.line(
-      boxLeft,
-      self.top + 1,
-      boxLeft,
-      self.top + self.height)
+    rectangleEngine.paint(
+      boxColors.background, boxLeft, self.top, boxWidth, self.height)
+    rectangleEngine.paint(
+      boxColors.foreground, boxLeft - 1, self.top, 1, self.height)
     local costText = textEngine.getTextObject(self.font, tostring(boxValue))
-    love.graphics.setColor(boxColors.foreground)
     textEngine.paintTextObject(
+      boxColors.foreground,
       costText,
       boxLeft + boxWidth / 2 - costText:getWidth() / 2,
       self.top + self.margin[2])

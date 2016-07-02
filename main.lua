@@ -45,7 +45,5 @@ function love.mousepressed(x, y, button, istouch)
 end
 
 function love.draw()
-  love.graphics.origin()
-  love.graphics.translate(0.5, 0.5)
   currentScreen:paint()
 end
