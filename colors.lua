@@ -6,7 +6,7 @@ return {
   inverseText = { 255, 255, 255 },
   textBox = { 80, 0, 80 },
   card = { 255, 255, 255 },
-  selectedHighlightColor = { 202, 255, 204 },
+  highlightColor = { 202, 255, 204 },
   selectedBorderColor = { 200, 200, 200 },
   untargetableColor = { 240, 240, 240 },
   spacer = { 120, 120, 120 },

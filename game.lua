@@ -12,20 +12,28 @@ local boxCard = ui.card:extend({
   paint = function (self)
     local borderColor = self.borderColor
     local color = self.color
+    local highlight = false
 
-    if ui.targeting.from ~= nil then
-      if ui.targeting:isSelected(self) then
-        love.graphics.setColor(self.selectedHighlightColor)
-        love.graphics.rectangle(
-          'fill',
-          self.left - 3 - 0.5,
-          self.top - 3 - 0.5,
-          self.width + 7,
-          self.height + 7)
+    if ui.targeting:isSet() then
+      if ui.targeting:isSource(self) then
+        highlight = true
+        color = self.untargetableColor
+      elseif ui.targeting:isSelected(self) then
+        highlight = true
         borderColor = self.selectedBorderColor
-      elseif not ui.targeting.from.isTargetable(self) then
+      elseif not ui.targeting:isTargetable(self) then
         color = self.untargetableColor
       end
+    end
+
+    if highlight then
+      love.graphics.setColor(self.highlightColor)
+      love.graphics.rectangle(
+        'fill',
+        self.left - 3 - 0.5,
+        self.top - 3 - 0.5,
+        self.width + 7,
+        self.height + 7)
     end
 
     love.graphics.setColor(color)
@@ -72,7 +80,7 @@ local styledBoxCard = boxCard:extend({
   color = colors.card,
   borderColor = colors.text,
   textColor = colors.text,
-  selectedHighlightColor = colors.selectedHighlightColor,
+  highlightColor = colors.highlightColor,
   selectedBorderColor = colors.selectedBorderColor,
   untargetableColor = colors.untargetableColor,
   width = 300,
@@ -135,13 +143,14 @@ local styledDeckCardColumn = styledColumn:extend({
   cards = {},
   minHeight = styledBoxCard.height * 5 + styledColumn.margin * 4,
   maxCards = 5,
-  tryDiscard = function (self, number, except, block)
+  tryDiscard = function (self, number, source, block)
     if number <= 0 then
       block()
     else
       ui.targeting:set({
+        source = source,
         isTargetable = function (card)
-          return card.column == self and card ~= except
+          return card.column == self and card ~= source
         end,
         target = function (card)
           ui.targeting:toggleSelected(card)
@@ -158,8 +167,8 @@ local styledDeckCardColumn = styledColumn:extend({
       })
     end
   end,
-  tryDiscardToMax = function (self, modifier, except, block)
-    self:tryDiscard(#self.cards + modifier - self.maxCards, except, block)
+  tryDiscardToMax = function (self, modifier, source, block)
+    self:tryDiscard(#self.cards + modifier - self.maxCards, source, block)
   end,
 })
 
@@ -253,6 +262,7 @@ local playerCard = styledBoxCard:extend({
   end,
   clicked = function (self)
     ui.targeting:set({
+      source = self,
       isTargetable = function (card)
         return card.runCost and hope.value >= card.runCost
       end,
@@ -343,7 +353,7 @@ local deckCard = styledBoxCard:extend({
     self.delay = false
   end,
   tryMoveToMindset = function (self, block)
-    mindset:tryDiscardToMax(1, nil, function ()
+    mindset:tryDiscardToMax(1, self, function ()
       self.column:remove(self)
       mindset:insert(self)
       self.column = mindset
@@ -476,6 +486,7 @@ local letItGo = deckCard:extend({
   end,
   activate = function (self, pay)
     ui.targeting:set({
+      source = self,
       isTargetable = function (card)
         return card.column == hand
       end,
@@ -586,7 +597,7 @@ local screen = {
   end,
   mousepressed = function (self, x, y, button, istouch)
     self:refresh()
-    local resetTargeting = ui.targeting.from ~= nil
+    local resetTargeting = ui.targeting:isSet()
     for i, shape in ipairs(self.shapes) do
       shape:mousepressed(x, y, button, istouch)
     end

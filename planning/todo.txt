@@ -1,6 +1,3 @@
-Player bake once
-[Commit]
-Highlight active
 Card UI refactoring
 Comments
 Differentiated players

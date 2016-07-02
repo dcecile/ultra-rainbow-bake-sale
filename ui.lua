@@ -32,18 +32,27 @@ local cursor = proto.object:extend({
 })
 
 local targeting = proto.object:extend({
-  from = nil,
+  current = nil,
   selected = {},
   continue = false,
-  set = function (self, from)
+  set = function (self, new)
     cursor:startTargeting()
-    self.from = from
+    self.current = new
+  end,
+  isSet = function (self)
+    return self.current ~= nil
   end,
   reset = function (self)
     cursor:stopTargeting()
-    self.from = nil
+    self.current = nil
     self.selected = {}
     self.continue = false
+  end,
+  isTargetable = function (self, check)
+    return self.current.isTargetable(check)
+  end,
+  target = function (self, check)
+    return self.current.target(check)
   end,
   toggleSelected = function (self, new)
     for i, old in ipairs(self.selected) do
@@ -53,6 +62,9 @@ local targeting = proto.object:extend({
       end
     end
     table.insert(self.selected, new)
+  end,
+  isSource = function (self, check)
+    return self.current.source == check
   end,
   isSelected = function (self, check)
     for i, found in ipairs(self.selected) do
@@ -93,9 +105,9 @@ local rectangle = proto.object:extend({
   end,
   mousepressed = function (self, x, y, button, istouch)
     if self:isInside(x, y) then
-      if targeting.from then
-        if targeting.from.isTargetable(self) then
-          targeting.from.target(self)
+      if targeting:isSet() then
+        if targeting:isTargetable(self) then
+          targeting:target(self)
         end
       elseif self:isClickable() then
         self:clicked()

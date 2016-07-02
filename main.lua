@@ -10,10 +10,10 @@ local fullscreen = false
 extraScreens.introScreen.gameScreen = game.screen
 
 currentScreen = extraScreens.titleScreen
---extraScreens.titleScreen.mute = true
+extraScreens.titleScreen.mute = true
 --fullscreen = true
---currentScreen = game.screen
---game.screen:start()
+currentScreen = game.screen
+game.screen:start()
 
 function love.load()
   love.window.setTitle('Ultra Rainbow Bake Sale')
