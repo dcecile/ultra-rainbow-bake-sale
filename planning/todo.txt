@@ -1,8 +1,7 @@
-Area headings
+Show card details on hover in bottom left
 Clean up task
 Burnt cupcakes task
 WIP fee
 Cleanup fee
 Differentiated players
 Increase hope cost of ignored tasks
-Show card details on hover in bottom left

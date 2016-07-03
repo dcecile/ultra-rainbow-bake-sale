@@ -3,6 +3,9 @@ local fontCache = {}
 local textObjectCache = {}
 
 local fontLoader = {
+  small = function ()
+    return love.graphics.newFont('RobotoCondensed-Light.ttf', 18)
+  end,
   big = function ()
     return love.graphics.newFont('RobotoCondensed-Light.ttf', 26)
   end,

@@ -117,7 +117,7 @@ local rectangle = proto.object:extend({
 
 local spacer = proto.object:extend({
   refresh = function (self)
-    self.height = self.margin[2] * 2 + 1
+    self.height = self.margin[2] + self.margin[3] + 1
   end,
   checkHover = function (self, x, y)
   end,
@@ -128,6 +128,23 @@ local spacer = proto.object:extend({
       self.top + self.margin[2],
       self.width - self.margin[1] * 2,
       1)
+  end,
+  mousepressed = function (self, x, y, button, istouch)
+  end,
+})
+
+local heading = proto.object:extend({
+  refresh = function (self)
+  end,
+  checkHover = function (self, x, y)
+  end,
+  paint = function (self)
+    local text = textEngine.getTextObject(self.fontName, self.text)
+    textEngine.paintTextObject(
+      self.color,
+      text,
+      math.floor(self.left + self.width / 2 - text:getWidth() / 2),
+      math.floor(self.top + self.height / 2 - text:getHeight() / 2))
   end,
   mousepressed = function (self, x, y, button, istouch)
   end,
@@ -193,5 +210,6 @@ return {
   rectangle = rectangle,
   card = card,
   spacer = spacer,
+  heading = heading,
   column = column,
 }

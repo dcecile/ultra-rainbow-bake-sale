@@ -57,7 +57,7 @@ local boxCard = ui.card:extend({
     textEngine.paintTextObject(
       boxColors.foreground,
       costText,
-      boxLeft + boxWidth / 2 - costText:getWidth() / 2,
+      math.floor(boxLeft + boxWidth / 2 - costText:getWidth() / 2),
       self.top + self.margin[2])
   end,
 })
@@ -77,8 +77,19 @@ local styledBoxCard = boxCard:extend({
 
 local styledSpacer = ui.spacer:extend({
   width = styledBoxCard.width,
-  margin = { 20, 10 },
+  margin = { 20, 6, 1 },
   color = colors.spacer,
+})
+
+local styledSpacerSymmetrical = styledSpacer:extend({
+  margin = { styledSpacer.margin[1], styledSpacer.margin[2], styledSpacer.margin[2] },
+})
+
+local styledHeading = ui.heading:extend({
+  height = 20,
+  width = styledBoxCard.width,
+  color = colors.heading,
+  fontName = 'small',
 })
 
 local styledPile = styledBoxCard:extend({
@@ -273,7 +284,7 @@ local start = kitchenAction:extend({
     })
     local bakeTimer = add({
       text = 'Bake timer',
-      runCost = 2,
+      runCost = 4,
       depends = {},
       isHidden = true,
     })
@@ -408,7 +419,7 @@ alex = playerCard:extend({
   text = 'Alex',
 })
 
-local bankCard = styledBoxCard:extend({
+local libraryCard = styledBoxCard:extend({
   clicked = function (self)
     hope:tryPay(self.card.buyCost, function ()
       local newCard = self.card:extend()
@@ -671,10 +682,11 @@ local bakingColumn = styledColumn:extend({
   top = 60,
   cards = {
     cupcakes,
-    styledSpacer:extend(),
+    styledSpacerSymmetrical:extend(),
     morgan,
     alex,
     styledSpacer:extend(),
+    styledHeading:extend({ text = 'Kitchen' }),
     kitchen,
   }
 })
@@ -686,33 +698,36 @@ local mainColumn = styledColumn:extend({
     discardPile,
     drawPile,
     styledSpacer:extend(),
+    styledHeading:extend({ text = 'Hand' }),
     hand,
     styledSpacer:extend(),
+    styledHeading:extend({ text = 'Mindset' }),
     mindset,
-    styledSpacer:extend(),
+    styledSpacerSymmetrical:extend(),
     endTurn,
     minutesUntilDinner,
   }
 })
 
-local bankColumn = styledColumn:extend({
+local libraryColumn = styledColumn:extend({
   left = mainColumn.left + styledBoxCard.width + 70,
   top = 60,
   cards = {
     hope,
     styledSpacer:extend(),
-    bankCard:make(feelingOfHope),
-    bankCard:make(visionOfHope),
-    bankCard:make(mildCuriosity),
-    bankCard:make(intenseCuriosity),
-    bankCard:make(youreNotAlone),
-    bankCard:make(itGetsBetter),
+    styledHeading:extend({ text = 'Library' }),
+    libraryCard:make(feelingOfHope),
+    libraryCard:make(visionOfHope),
+    libraryCard:make(mildCuriosity),
+    libraryCard:make(intenseCuriosity),
+    libraryCard:make(youreNotAlone),
+    libraryCard:make(itGetsBetter),
   }
 })
 
 local screen = {
   color = colors.lightBackground,
-  shapes = { bakingColumn, mainColumn, bankColumn },
+  shapes = { bakingColumn, mainColumn, libraryColumn },
   refresh = function (self)
     local mouseX, mouseY = love.mouse.getPosition()
     ui.cursor:clear()
@@ -756,7 +771,7 @@ local screen = {
     hand.cards = {}
     mindset.cards = {}
     cupcakes.value = 0
-    endTurn.turnCounter = 12
+    endTurn.turnCounter = 18
 
     local seed = love.timer.getTime()
     print('seed', seed)

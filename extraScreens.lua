@@ -19,8 +19,8 @@ titleScreen = {
     textEngine.paintTextObject(
         colors.inverseText,
         titleText,
-        width / 2 - titleText:getWidth() / 2,
-        height / 2 - titleText:getHeight() / 2)
+        math.floor(width / 2 - titleText:getWidth() / 2),
+        math.floor(height / 2 - titleText:getHeight() / 2))
   end,
   mousepressed = function (self, x, y, button, istouch)
     currentScreen = introScreen

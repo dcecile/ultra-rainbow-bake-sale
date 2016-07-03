@@ -9,7 +9,8 @@ return {
   highlightColor = { 202, 255, 204 },
   selectedBorderColor = { 200, 200, 200 },
   untargetableColor = { 240, 240, 240 },
-  spacer = { 120, 120, 120 },
+  spacer = { 150, 150, 150 },
+  heading = { 100, 100, 100 },
   hope = {
     foreground = { 255, 75, 217 },
     background = { 255, 231, 250 },

@@ -6,19 +6,21 @@ local utils = require('utils')
 music = nil
 credits = nil
 local fullscreen = false
+local quitShortcut = false
 
 extraScreens.introScreen.gameScreen = game.screen
 
 currentScreen = extraScreens.titleScreen
 extraScreens.titleScreen.mute = true
 --fullscreen = true
+quitShortcut = true
 currentScreen = game.screen
 game.screen:start()
 
 function love.load()
   love.window.setTitle('Ultra Rainbow Bake Sale')
   love.window.setMode(
-    1010,
+    1700,
     1010,
     {
       resizable = true,
@@ -35,8 +37,10 @@ function love.load()
 end
 
 function love.keypressed(key, isrepeat)
-  if key == ' ' or key == 'return' then
-    love.event.quit()
+  if quitShortcut then
+    if key == ' ' or key == 'return' then
+      love.event.quit()
+    end
   end
 end
 
