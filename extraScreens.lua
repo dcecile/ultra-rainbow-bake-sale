@@ -55,8 +55,8 @@ introScreen = {
     ui.cursor:clickable()
     love.graphics.setBackgroundColor(colors.darkBackground)
     local width, height = love.graphics.getDimensions()
-    rectangleEngine.paint(
-      colors.textBox, 100.5, 100.5, width - 200, height - 200)
+    rectangleEngine.paintPadded(
+      colors.textBox, 0, 0, width, height, -100)
 
     paintLines(colors.inverseText, {
       { 'Alex', 'Who\'s idea was this anyways?' },
@@ -80,8 +80,8 @@ doneScreen = {
     ui.cursor:clickable()
     love.graphics.setBackgroundColor(colors.lightBackground)
     local width, height = love.graphics.getDimensions()
-    rectangleEngine.paint(
-      colors.textBox, 100.5, 100.5, width - 200, height - 200)
+    rectangleEngine.paintPadded(
+      colors.textBox, 0, 0, width, height, -100)
     paintLines(colors.inverseText, {
       { 'Morgan', 'We baked ' .. self.totalCupcakes .. ' cupcakes!' },
       { 'Alex', 'Great!' },

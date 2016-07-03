@@ -1,10 +1,8 @@
+Area headings
 Clean up task
 Burnt cupcakes task
 WIP fee
 Cleanup fee
 Differentiated players
-Clearer end-game condition
-Cupcake baking reward visuals
 Increase hope cost of ignored tasks
 Show card details on hover in bottom left
-Area headings

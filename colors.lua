@@ -22,8 +22,8 @@ return {
     foreground = { 0, 216, 202 },
     background = { 233, 255, 254 },
   },
-  endTurn = {
-    foreground = { 60, 60, 60 },
+  time = {
+    foreground = { 137, 137, 137 },
     background = { 244, 244, 244 },
   },
   cupcakes = {

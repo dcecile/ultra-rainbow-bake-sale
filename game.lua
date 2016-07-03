@@ -1,4 +1,5 @@
 local colors = require('colors')
+local cupcakeScreen = require('cupcakeScreen')
 local extraScreens = require('extraScreens')
 local proto = require('proto')
 local rectangleEngine = require('rectangleEngine')
@@ -308,6 +309,7 @@ local start = kitchenAction:extend({
       run = function (self)
         kitchenAction.run(self)
         cupcakes.value = cupcakes.value + 12
+        currentScreen = cupcakeScreen.screen
       end,
     })
     local nextGatherIngedients = add({
@@ -646,10 +648,21 @@ local endTurn = styledBoxCard:extend({
     end
   end,
   getBoxColors = function (self)
-    return colors.endTurn
+    return colors.time
   end,
   getBoxValue = function (self)
     return self.turnCounter
+  end,
+})
+
+local minutesUntilDinner = styledBoxCard:extend({
+  text = 'Kitchen minutes left',
+  textColor = colors.time.foreground,
+  getBoxColors = function (self)
+    return colors.time
+  end,
+  getBoxValue = function (self)
+    return endTurn.turnCounter * 5
   end,
 })
 
@@ -678,6 +691,7 @@ local mainColumn = styledColumn:extend({
     mindset,
     styledSpacer:extend(),
     endTurn,
+    minutesUntilDinner,
   }
 })
 
@@ -752,6 +766,8 @@ local screen = {
     startTurn()
   end,
 }
+
+cupcakeScreen.screen.gameScreen = screen
 
 return {
   screen = screen
