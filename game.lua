@@ -94,11 +94,11 @@ local styledPile = styledBoxCard:extend({
 })
 
 local discardPile = styledPile:extend({
-  text = 'Discard'
+  text = 'Discard pile'
 })
 
 local drawPile = styledPile:extend({
-  text = 'Draw',
+  text = 'Draw pile',
   shuffle = function (self)
     local newCards = {}
     while #self.cards > 0 do
@@ -199,12 +199,16 @@ local cupcakes = styledBoxCard:extend({
   end,
 })
 
-local bakeCupcakes = styledBoxCard:extend({
-  text = 'Bake some cupcakes',
+local kitchen
+local morgan
+local alex
+
+local kitchenAction = styledBoxCard:extend({
+  isDone = false,
+  isHidden = false,
   borderColor = colors.cupcakes.foreground,
-  runCost = 10,
   refresh = function (self)
-    if hope.value >= self.runCost then
+    if (not morgan.isBusy or not alex.isBusy) and hope.value >= self.runCost then
       self.boxColors = colors.hope
       self.textColor = colors.cupcakes.foreground
     else
@@ -219,19 +223,137 @@ local bakeCupcakes = styledBoxCard:extend({
     return self.runCost
   end,
   run = function (self)
-    cupcakes.value = cupcakes.value + 12
+    self.isDone = true
+    if not self.isHidden then
+      kitchen:remove(self)
+    end
   end,
 })
 
-local kitchen = styledColumn:extend({
+local start = kitchenAction:extend({
+  text = 'Start',
+  runCost = 4,
+  depends = {},
+  takeOut = nil,
+  decorate = nil,
+  run = function (self)
+    local function add(properties)
+      local card = kitchenAction:extend(properties)
+      if not card.isHidden then
+        table.insert(kitchen.actions, card)
+      end
+      return card
+    end
+    local measureDry = add({
+      text = 'Measure dry',
+      runCost = 1,
+      depends = { self },
+    })
+    local measureWet = add({
+      text = 'Measure wet',
+      runCost = 1,
+      depends = { measureDry },
+    })
+    local mixDry = add({
+      text = 'Mix dry',
+      runCost = 1,
+      depends = { measureDry },
+    })
+
+    local mixAll = add({
+      text = 'Mix together',
+      runCost = 2,
+      depends = { mixDry, measureWet },
+    })
+    local pour = add({
+      text = 'Pour batter',
+      runCost = 4,
+      depends = { mixAll, self.takeOut },
+    })
+    local bakeTimer = add({
+      text = 'Bake timer',
+      runCost = 2,
+      depends = {},
+      isHidden = true,
+    })
+    local putInOven = add({
+      text = 'Put in oven',
+      runCost = 6,
+      depends = { pour },
+      run = function (self)
+        kitchenAction.run(self)
+        kitchen.activeTimer = function ()
+          bakeTimer.runCost = bakeTimer.runCost - 1
+          if bakeTimer.runCost == 0 then
+            bakeTimer:run()
+            kitchen.activeTimer = nil
+          end
+        end
+      end,
+    })
+    local takeOut = add({
+      text = 'Take out',
+      runCost = 4,
+      depends = { bakeTimer },
+    })
+    local makeIcing = add({
+      text = 'Make icing',
+      runCost = 6,
+      depends = { mixAll },
+    })
+    local decorate = add({
+      text = 'Decorate with icing',
+      runCost = 10,
+      depends = { makeIcing, takeOut, self.decorate },
+      run = function (self)
+        kitchenAction.run(self)
+        cupcakes.value = cupcakes.value + 12
+      end,
+    })
+    local nextGatherIngedients = add({
+      text = self.text,
+      runCost = self.runCost,
+      depends = { makeIcing },
+      takeOut = takeOut,
+      decorate = decorate,
+      run = self.run,
+    })
+    kitchenAction.run(self)
+  end,
+})
+
+kitchen = styledColumn:extend({
   cards = {
-    bakeCupcakes,
-  }
+    start,
+  },
+  actions = {},
+  activeTimer = nil,
+  tick = function (self)
+    if self.activeTimer then
+      self.activeTimer()
+    end
+    local newActions = {}
+    for i, action in ipairs(kitchen.actions) do
+      local ready = true
+      for j, depend in ipairs(action.depends) do
+        if not depend.isDone then
+          ready = false
+          break
+        end
+      end
+      if ready then
+        kitchen:insert(action)
+      else
+        table.insert(newActions, action)
+      end
+    end
+    self.actions = newActions
+  end,
 })
 
 local playerCard = styledBoxCard:extend({
   value = 0,
-  busy = false,
+  isBusy = false,
   refresh = function (self)
     if self:isClickable() then
       self.textColor = colors.player.foreground
@@ -240,7 +362,11 @@ local playerCard = styledBoxCard:extend({
     end
   end,
   getBoxColors = function (self)
-    return colors.player
+    if self.isBusy then
+      return colors.playerDisabled
+    else
+      return colors.player
+    end
   end,
   getBoxValue = function (self)
     return self.value
@@ -255,21 +381,28 @@ local playerCard = styledBoxCard:extend({
         hope:pay(card.runCost)
         card:run()
         self.value = self.value + 1
-        self.busy = true
+        self.isBusy = true
         ui.targeting:reset()
       end,
     })
   end,
   isClickable = function (self)
-    return not self.busy and hope.value >= bakeCupcakes.runCost
+    if not self.isBusy then
+      for i, card in ipairs(kitchen.cards) do
+        if hope.value >= card.runCost then
+          return true
+        end
+      end
+    end
+    return false
   end,
 })
 
-local morgan = playerCard:extend({
+morgan = playerCard:extend({
   text = 'Morgan',
 })
 
-local alex = playerCard:extend({
+alex = playerCard:extend({
   text = 'Alex',
 })
 
@@ -495,8 +628,9 @@ local function startTurn()
   for i, card in ipairs(mindset.cards) do
     card.delay = false
   end
-  morgan.busy = false
-  alex.busy = false
+  morgan.isBusy = false
+  alex.isBusy = false
+  kitchen:tick()
 end
 
 local endTurn = styledBoxCard:extend({
@@ -608,7 +742,7 @@ local screen = {
     hand.cards = {}
     mindset.cards = {}
     cupcakes.value = 0
-    endTurn.turnCounter = 8
+    endTurn.turnCounter = 12
 
     local seed = love.timer.getTime()
     print('seed', seed)

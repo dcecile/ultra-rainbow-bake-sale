@@ -34,4 +34,8 @@ return {
     foreground = { 97, 153, 255 },
     background = { 243, 246, 255 },
   },
+  playerDisabled = {
+    foreground = { 209, 221, 241 },
+    background = { 246, 249, 252 },
+  },
 }
