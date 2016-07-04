@@ -9,6 +9,9 @@ local fontLoader = {
   big = function ()
     return love.graphics.newFont('RobotoCondensed-Light.ttf', 26)
   end,
+  bold = function ()
+    return love.graphics.newFont('RobotoCondensed-Regular.ttf', 26)
+  end,
   title = function ()
     return love.graphics.newFont('RobotoCondensed-Regular.ttf', 48)
   end,

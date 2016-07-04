@@ -81,10 +81,6 @@ local rectangle = proto.object:extend({
   refresh = function (self)
   end,
   paint = function (self)
-    rectangleEngine.paintPadded(
-      self.borderColor, self.left, self.top, self.width, self.height, 1)
-    rectangleEngine.paint(
-      self.color, self.left, self.top, self.width, self.height)
   end,
   isInside = function (self, x, y)
     if self.left <= x and x < self.left + self.width then
@@ -97,9 +93,9 @@ local rectangle = proto.object:extend({
   isClickable = function (self)
     return self.clicked ~= nil
   end,
-  checkHover = function (self, x, y)
-    if self:isClickable() and self:isInside(x, y) then
-      cursor:clickable()
+  checkHover = function (self, x, y, block)
+    if self:isInside(x, y) then
+      block(self)
     end
   end,
   mousepressed = function (self, x, y, button, istouch)
@@ -115,11 +111,9 @@ local rectangle = proto.object:extend({
   end,
 })
 
-local spacer = proto.object:extend({
+local spacer = rectangle:extend({
   refresh = function (self)
     self.height = self.margin[2] + self.margin[3] + 1
-  end,
-  checkHover = function (self, x, y)
   end,
   paint = function (self)
     rectangleEngine.paint(
@@ -129,30 +123,25 @@ local spacer = proto.object:extend({
       self.width - self.margin[1] * 2,
       1)
   end,
-  mousepressed = function (self, x, y, button, istouch)
-  end,
 })
 
-local heading = proto.object:extend({
-  refresh = function (self)
-  end,
-  checkHover = function (self, x, y)
-  end,
+local heading = rectangle:extend({
   paint = function (self)
-    local text = textEngine.getTextObject(self.fontName, self.text)
+    local text = textEngine.getTextObject(self.font, self.text)
     textEngine.paintTextObject(
       self.color,
       text,
       math.floor(self.left + self.width / 2 - text:getWidth() / 2),
       math.floor(self.top + self.height / 2 - text:getHeight() / 2))
   end,
-  mousepressed = function (self, x, y, button, istouch)
-  end,
 })
 
 local card = rectangle:extend({
   paint = function (self)
-    rectangle.paint(self)
+    rectangleEngine.paintPadded(
+      self.borderColor, self.left, self.top, self.width, self.height, 1)
+    rectangleEngine.paint(
+      self.color, self.left, self.top, self.width, self.height)
     textEngine.paint(
       self.textColor,
       self.font,
@@ -173,9 +162,9 @@ local column = proto.object:extend({
     end
     self.height = math.max(self.minHeight, nextTop - self.top - self.margin)
   end,
-  checkHover = function (self, x, y)
+  checkHover = function (self, x, y, block)
     for i, card in ipairs(self.cards) do
-      card:checkHover(x, y)
+      card:checkHover(x, y, block)
     end
   end,
   paint = function (self)

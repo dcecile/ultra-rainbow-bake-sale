@@ -53,11 +53,11 @@ local boxCard = ui.card:extend({
       boxColors.background, boxLeft, self.top, boxWidth, self.height)
     rectangleEngine.paint(
       boxColors.foreground, boxLeft - 1, self.top, 1, self.height)
-    local costText = textEngine.getTextObject(self.font, tostring(boxValue))
+    local boxText = textEngine.getTextObject(self.font, tostring(boxValue))
     textEngine.paintTextObject(
       boxColors.foreground,
-      costText,
-      math.floor(boxLeft + boxWidth / 2 - costText:getWidth() / 2),
+      boxText,
+      math.floor(boxLeft + boxWidth / 2 - boxText:getWidth() / 2),
       self.top + self.margin[2])
   end,
 })
@@ -89,7 +89,7 @@ local styledHeading = ui.heading:extend({
   height = 20,
   width = styledBoxCard.width,
   color = colors.heading,
-  fontName = 'small',
+  font = 'small',
 })
 
 local styledPile = styledBoxCard:extend({
@@ -106,11 +106,19 @@ local styledPile = styledBoxCard:extend({
 })
 
 local discardPile = styledPile:extend({
-  text = 'Discard pile'
+  text = 'Discard pile',
+  description =
+    'Used and acquired cards\n'
+    .. 'go here.',
 })
 
 local drawPile = styledPile:extend({
   text = 'Draw pile',
+  description =
+    'These are the cards that\n'
+    .. 'will be drawn next. When\n'
+    .. 'empty, the discard pile is\n'
+    .. 'taken and shuffled.',
   shuffle = function (self)
     local newCards = {}
     while #self.cards > 0 do
@@ -169,12 +177,35 @@ local styledDeckCardColumn = styledColumn:extend({
   end,
 })
 
+local handHeading = styledHeading:extend({
+  text = 'Hand',
+  description =
+    'Current thoughts, feelings,\n'
+    .. 'and ideas ready for action.\n'
+    .. 'Click a card to pay hope\n'
+    .. 'and use.',
+})
+
 local hand = styledDeckCardColumn:extend()
+
+local mindsetHeading = styledHeading:extend({
+  text = 'Mindset',
+  description =
+    'Persistent philosophies\n'
+    .. 'and paradigms. Click a\n'
+    .. 'card to pay hope and use.\n'
+    .. 'New mindsets need one\n'
+    .. 'turn to get established.',
+})
 
 local mindset = styledDeckCardColumn:extend()
 
 local hope = styledBoxCard:extend({
   text = 'Hope',
+  description =
+    'Build up and find hope.\n'
+    .. 'Use it to do good things,\n'
+    .. 'or just things.',
   value = 0,
   add = function (self, value)
     self.value = self.value + value
@@ -200,6 +231,11 @@ local hope = styledBoxCard:extend({
 
 local cupcakes = styledBoxCard:extend({
   text = 'Total cupcakes',
+  description =
+    'The current recipe is for\n'
+    .. 'cupcakes. Bake and\n'
+    .. 'decorate, to prepare for\n'
+    .. 'tomorrow’s bake sale.',
   value = 0,
   textColor = colors.cupcakes.foreground,
   borderColor = colors.cupcakes.foreground,
@@ -244,6 +280,9 @@ local kitchenAction = styledBoxCard:extend({
 
 local start = kitchenAction:extend({
   text = 'Start',
+  description =
+    'They say that the first\n'
+    .. 'step is always the hardest.',
   runCost = 4,
   depends = {},
   takeOut = nil,
@@ -258,27 +297,47 @@ local start = kitchenAction:extend({
     end
     local measureDry = add({
       text = 'Measure dry',
+      description =
+        'Measure out the flours,\n'
+        .. 'sugars, salts, spices, and\n'
+        .. 'rising agents.',
       runCost = 1,
       depends = { self },
     })
     local measureWet = add({
       text = 'Measure wet',
+      description =
+        'Measure out the milk and\n'
+        .. 'oil. Don’t forget vanilla.',
       runCost = 1,
       depends = { measureDry },
     })
     local mixDry = add({
       text = 'Mix dry',
+      description =
+        'Sift to avoid packing. Mix\n'
+        .. 'well. The fun is getting\n'
+        .. 'started.',
       runCost = 1,
       depends = { measureDry },
     })
 
     local mixAll = add({
       text = 'Mix together',
+      description =
+        'Pour into the well. Mix only\n'
+        .. 'until dry ingredients are\n'
+        .. 'moistened. Basically done.',
       runCost = 2,
       depends = { mixDry, measureWet },
     })
     local pour = add({
       text = 'Pour batter',
+      description =
+        'Fill each cupcake liner\n'
+        .. 'about three quarters full.\n'
+        .. 'The journey is the\n'
+        .. 'destination.',
       runCost = 4,
       depends = { mixAll, self.takeOut },
     })
@@ -290,6 +349,11 @@ local start = kitchenAction:extend({
     })
     local putInOven = add({
       text = 'Put in oven',
+      description =
+        'In it goes. Hopefully the\n'
+        .. 'portions are correct. Be\n'
+        .. 'patient, and accept the\n'
+        .. 'flow of time.',
       runCost = 6,
       depends = { pour },
       run = function (self)
@@ -305,16 +369,29 @@ local start = kitchenAction:extend({
     })
     local takeOut = add({
       text = 'Take out',
+      description =
+        'It’s done! But it does’t look\n'
+        .. 'like cupcakes.',
       runCost = 4,
       depends = { bakeTimer },
     })
     local makeIcing = add({
       text = 'Make icing',
+      description =
+        'Very, very sweet. Use\n'
+        .. 'all-natural food colouring.\n'
+        .. 'The present self prepares\n'
+        .. 'for the future self.',
       runCost = 6,
       depends = { mixAll },
     })
     local decorate = add({
       text = 'Decorate with icing',
+      description =
+        'Ah, the finishing touch. It’s\n'
+        .. 'okay to get excited here\n'
+        .. 'and just go wild. Show\n'
+        .. 'them your free spirit!',
       runCost = 10,
       depends = { makeIcing, takeOut, self.decorate },
       run = function (self)
@@ -325,6 +402,7 @@ local start = kitchenAction:extend({
     })
     local nextGatherIngedients = add({
       text = self.text,
+      description = self.description,
       runCost = self.runCost,
       depends = { makeIcing },
       takeOut = takeOut,
@@ -335,11 +413,16 @@ local start = kitchenAction:extend({
   end,
 })
 
+local kitchenHeading = styledHeading:extend({
+  text = 'Kitchen',
+  description =
+    'Follow the recipe. Some\n'
+    .. 'tasks are harder than\n'
+    .. 'others. Morgan and Alex\n'
+    .. 'are keen to start.',
+})
+
 kitchen = styledColumn:extend({
-  cards = {
-    start,
-  },
-  actions = {},
   activeTimer = nil,
   tick = function (self)
     if self.activeTimer then
@@ -413,10 +496,31 @@ local playerCard = styledBoxCard:extend({
 
 morgan = playerCard:extend({
   text = 'Morgan',
+  description =
+    'Enthusiastic, kind, caring,\n'
+    .. 'and sensitive. Bullies call\n'
+    .. 'him gay, but he’s more\n'
+    .. 'worried about how other\n'
+    .. 'kids are affected. Best\n'
+    .. 'friend of Alex.',
 })
 
 alex = playerCard:extend({
   text = 'Alex',
+  description =
+    'Strong, brave, caring, and\n'
+    .. 'insolent. Bullies call her\n'
+    .. 'gay, and it reminds her to\n'
+    .. 'stay proud and pissed off.\n'
+    .. 'Best friend of Morgan.',
+})
+
+local libraryHeading = styledHeading:extend({
+  text = 'Library',
+  description =
+    'New techniques to learn\n'
+    .. 'and try out. Click a card\n'
+    .. 'to pay hope and aquire.',
 })
 
 local libraryCard = styledBoxCard:extend({
@@ -430,6 +534,7 @@ local libraryCard = styledBoxCard:extend({
     return self:extend({
       card = card,
       text = card.text,
+      description = card.description,
     })
   end,
   refresh = function (self)
@@ -533,16 +638,28 @@ local hopeFeeling = deckCard:extend({
 
 local glimmerOfHope = hopeFeeling:extend({
   text = 'Glimmer of hope',
+  description =
+    'Fundamental source of\n'
+    .. 'hope. Play and discard\n'
+    .. 'to gain 1 hope.',
   buyCost = 1,
 })
 
 local feelingOfHope = hopeFeeling:extend({
   text = 'Feeling of hope',
+  description =
+    'Fundamental source of\n'
+    .. 'hope. Play and discard\n'
+    .. 'to gain 2 hope.',
   buyCost = 2,
 })
 
 local visionOfHope = hopeFeeling:extend({
   text = 'Vision of hope',
+  description =
+    'Fundamental source of\n'
+    .. 'hope. Play and discard\n'
+    .. 'to gain 4 hope.',
   buyCost = 4,
 })
 
@@ -561,19 +678,31 @@ local hopeMindset = deckCard:extend({
 })
 
 local youreNotAlone = hopeMindset:extend({
-  text = 'You\'re not alone',
+  text = 'You’re not alone',
+  description =
+    'Continual source of hope.\n'
+    .. 'Play this mindset, then\n'
+    .. 'activate to gain 1 hope.',
   buyCost = 1,
   playCost = 1,
 })
 
 local itGetsBetter = hopeMindset:extend({
   text = 'It gets better',
+  description =
+    'Continual source of hope.\n'
+    .. 'Play this mindset, then\n'
+    .. 'activate to gain 4 hope.',
   buyCost = 4,
   playCost = 4,
 })
 
 local ennui = deckCard:extend({
   text = 'Ennui',
+  description =
+    'Boredom. Enervation.\n'
+    .. 'Un-motivation. Fatigue.\n'
+    .. 'Cannot be played.',
   playCost = math.huge,
   getBoxValue = function (self)
     return '∞'
@@ -595,18 +724,32 @@ local curiosity = deckCard:extend({
 
 local mildCuriosity = curiosity:extend({
   text = 'Mild curiosity',
+  description =
+    'Don’t be afraid of the\n'
+    .. 'unknown. Play and discard\n'
+    .. 'to draw 2 cards.',
   buyCost = 1,
   playCost = 1,
 })
 
 local intenseCuriosity = curiosity:extend({
   text = 'Intense curiosity',
+  description =
+    'Don’t be afraid of the\n'
+    .. 'unknown. Play and discard\n'
+    .. 'to draw 4 cards.',
   buyCost = 3,
   playCost = 3,
 })
 
 local letItGo = deckCard:extend({
   text = 'Let it go',
+  description =
+    'Be present. Let go. Play\n'
+    .. 'this mindset, then activate\n'
+    .. 'and discard. Return one\n'
+    .. 'card to the library, and\n'
+    .. 'draw a new card.',
   buyCost = 1,
   playCost = 1,
   activateCost = 0,
@@ -648,6 +791,12 @@ end
 
 local endTurn = styledBoxCard:extend({
   text = 'End turn',
+  description =
+    'When there’s nothing left\n'
+    .. 'to do, click to finish the\n'
+    .. 'turn. Cards in hand will be\n'
+    .. 'discarded and new ones\n'
+    .. 'drawn.',
   clicked = function (self)
     if self.turnCounter == 0 then
       extraScreens.doneScreen.totalCupcakes = cupcakes.value
@@ -666,14 +815,71 @@ local endTurn = styledBoxCard:extend({
   end,
 })
 
-local minutesUntilDinner = styledBoxCard:extend({
+local kitchenMinutes = styledBoxCard:extend({
   text = 'Kitchen minutes left',
+  description =
+    'The kitchen actually\n'
+    .. 'belongs to Alex’s parents,\n'
+    .. 'and they’re planning on\n'
+    .. 'making dinner soon. Don’t\n'
+    .. 'forget to clean up.',
   textColor = colors.time.foreground,
   getBoxColors = function (self)
     return colors.time
   end,
   getBoxValue = function (self)
     return endTurn.turnCounter * 5
+  end,
+})
+
+local function hasInfo(card)
+  return card.text and card.description
+end
+
+local infoBox = ui.rectangle:extend({
+  title = nil,
+  body = nil,
+  font = 'big',
+  borderColor = colors.text,
+  color = colors.lightBackground,
+  textColor = colors.text,
+  highlightColor = colors.highlightColor,
+  margin = styledBoxCard.margin,
+  width = styledBoxCard.width,
+  height = 320,
+  refresh = function (self)
+    self.left = cupcakes.left
+    self.top = kitchenMinutes.top + kitchenMinutes.height - self.height
+  end,
+  paint = function (self)
+    if ui.targeting:isSet() and ui.targeting:isSource(self) then
+      rectangleEngine.paintPadded(
+        self.highlightColor, self.left, self.top, self.width, self.height, 3)
+    end
+    rectangleEngine.paintPadded(
+      self.borderColor, self.left, self.top, self.width, self.height, 1)
+    rectangleEngine.paint(
+      self.color, self.left, self.top, self.width, self.height)
+    textEngine.paint(
+      self.textColor,
+      'bold',
+      self.title,
+      self.left + self.margin[1],
+      self.top + self.margin[2])
+    textEngine.paint(
+      self.textColor,
+      self.font,
+      self.body,
+      self.left + self.margin[1],
+      self.top + self.margin[2] + 40)
+  end,
+  reset = function (self)
+    self.title = 'Info box'
+    self.body = 'Hover over a card to get\ndetailed info.'
+  end,
+  set = function (self, card)
+    self.title = card.text
+    self.body = card.description
   end,
 })
 
@@ -686,7 +892,7 @@ local bakingColumn = styledColumn:extend({
     morgan,
     alex,
     styledSpacer:extend(),
-    styledHeading:extend({ text = 'Kitchen' }),
+    kitchenHeading,
     kitchen,
   }
 })
@@ -698,14 +904,14 @@ local mainColumn = styledColumn:extend({
     discardPile,
     drawPile,
     styledSpacer:extend(),
-    styledHeading:extend({ text = 'Hand' }),
+    handHeading,
     hand,
     styledSpacer:extend(),
-    styledHeading:extend({ text = 'Mindset' }),
+    mindsetHeading,
     mindset,
     styledSpacerSymmetrical:extend(),
     endTurn,
-    minutesUntilDinner,
+    kitchenMinutes,
   }
 })
 
@@ -715,7 +921,7 @@ local libraryColumn = styledColumn:extend({
   cards = {
     hope,
     styledSpacer:extend(),
-    styledHeading:extend({ text = 'Library' }),
+    libraryHeading,
     libraryCard:make(feelingOfHope),
     libraryCard:make(visionOfHope),
     libraryCard:make(mildCuriosity),
@@ -727,13 +933,21 @@ local libraryColumn = styledColumn:extend({
 
 local screen = {
   color = colors.lightBackground,
-  shapes = { bakingColumn, mainColumn, libraryColumn },
+  shapes = { bakingColumn, mainColumn, libraryColumn, infoBox },
   refresh = function (self)
     local mouseX, mouseY = love.mouse.getPosition()
     ui.cursor:clear()
+    infoBox:reset()
     for i, shape in ipairs(self.shapes) do
       shape:refresh()
-      shape:checkHover(mouseX, mouseY)
+      shape:checkHover(mouseX, mouseY, function (card)
+        if card:isClickable() then
+          ui.cursor:clickable()
+        end
+        if hasInfo(card) then
+          infoBox:set(card)
+        end
+      end)
     end
   end,
   paint = function (self)
@@ -770,6 +984,8 @@ local screen = {
     drawPile.cards = {}
     hand.cards = {}
     mindset.cards = {}
+    kitchen.cards = { start:extend() }
+    kitchen.actions = {}
     cupcakes.value = 0
     endTurn.turnCounter = 18
 

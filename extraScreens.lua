@@ -59,14 +59,14 @@ introScreen = {
       colors.textBox, 0, 0, width, height, -100)
 
     paintLines(colors.inverseText, {
-      { 'Alex', 'Who\'s idea was this anyways?' },
+      { 'Alex', 'Who’s idea was this anyways?' },
       { 'Morgan', 'Come on, love will always conquer hatred.' },
-      { 'Alex', 'With baked goods? We\'ve never baked before.' },
+      { 'Alex', 'With baked goods? We’ve never baked before.' },
       { 'Morgan', 'Just follow the recipe. Like in science class.' },
-      { 'Alex', 'You\'re no good at science.' },
+      { 'Alex', 'You’re no good at science.' },
       { 'Morgan', '...' },
-      { 'Alex', 'Fine, let\'s just start with some simple cupcakes.' },
-      { 'Morgan', 'Now we\'re talking!' },
+      { 'Alex', 'Fine, let’s just start with some simple cupcakes.' },
+      { 'Morgan', 'Now we’re talking!' },
     })
   end,
   mousepressed = function (self, x, y, button, istouch)
@@ -129,7 +129,9 @@ creditsScreen = {
     local width, height = love.graphics.getDimensions()
     self.buttons.left = width / 2 - creditsCard.width / 2
     self.buttons:refresh()
-    self.buttons:checkHover(mouseX, mouseY)
+    self.buttons:checkHover(mouseX, mouseY, function ()
+      ui.cursor:clickable()
+    end)
 
     love.graphics.setBackgroundColor(colors.darkBackground)
     textEngine.paint(colors.inverseText, 'big', credits, 20, 20)

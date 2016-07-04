@@ -1,4 +1,3 @@
-Show card details on hover in bottom left
 Clean up task
 Burnt cupcakes task
 WIP fee
