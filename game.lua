@@ -287,6 +287,7 @@ local start = kitchenAction:extend({
   depends = {},
   takeOut = nil,
   decorate = nil,
+  cleanBag = nil,
   run = function (self)
     local function add(properties)
       local card = kitchenAction:extend(properties)
@@ -312,6 +313,16 @@ local start = kitchenAction:extend({
       runCost = 1,
       depends = { measureDry },
     })
+    local cleanCups = add({
+      text = 'Clean measuring cups',
+      description =
+        'Responsibility means\n'
+        .. 'cleaning up after making\n'
+        .. 'a mess.',
+      runCost = 2,
+      cleanupTrigger = measureDry,
+      depends = { measureWet, self.cleanBag },
+    })
     local mixDry = add({
       text = 'Mix dry',
       description =
@@ -321,7 +332,6 @@ local start = kitchenAction:extend({
       runCost = 1,
       depends = { measureDry },
     })
-
     local mixAll = add({
       text = 'Mix together',
       description =
@@ -341,12 +351,31 @@ local start = kitchenAction:extend({
       runCost = 4,
       depends = { mixAll, self.takeOut },
     })
+    local cleanBowl = add({
+      text = 'Clean mixing bowl',
+      description =
+        'No matter how big the\n'
+        .. 'problem.',
+      runCost = 4,
+      cleanupTrigger = mixDry,
+      depends = { cleanCups, pour },
+    })
+    local cleanUtensils = add({
+      text = 'Clean utensils',
+      description =
+        'But friends will always be\n'
+        .. 'there to lend a hand.',
+      runCost = 2,
+      cleanupTrigger = measureDry,
+      depends = { cleanBowl },
+    })
     local bakeTimer = add({
       text = 'Bake timer',
       runCost = 4,
       depends = {},
       isHidden = true,
     })
+    local burnt
     local putInOven = add({
       text = 'Put in oven',
       description =
@@ -362,7 +391,9 @@ local start = kitchenAction:extend({
           bakeTimer.runCost = bakeTimer.runCost - 1
           if bakeTimer.runCost == 0 then
             bakeTimer:run()
+          elseif bakeTimer.runCost == -1 then
             kitchen.activeTimer = nil
+            burnt()
           end
         end
       end,
@@ -374,6 +405,20 @@ local start = kitchenAction:extend({
         .. 'like cupcakes.',
       runCost = 4,
       depends = { bakeTimer },
+      run = function (self)
+        kitchenAction.run(self)
+        kitchen.activeTimer = nil
+      end
+    })
+    local cleanSheet = add({
+      text = 'Clean baking sheet',
+      description =
+        'They’ll understand that\n'
+        .. 'some messes are fun and\n'
+        .. 'others are funny.',
+      runCost = 1,
+      cleanupTrigger = takeOut,
+      depends = { cleanUtensils, takeOut },
     })
     local makeIcing = add({
       text = 'Make icing',
@@ -400,6 +445,39 @@ local start = kitchenAction:extend({
         currentScreen = cupcakeScreen.screen
       end,
     })
+    local cleanBag = add({
+      text = 'Clean piping bag',
+      description =
+        'In the end, life itself is one\n'
+        .. 'big series of messes.',
+      runCost = 6,
+      cleanupTrigger = makeIcing,
+      depends = { cleanSheet, decorate },
+    })
+    function burnt()
+      takeOut.isDone = true
+      decorate.isDone = true
+      kitchen:remove(takeOut)
+      if not makeIcing.isDone then
+        makeIcing.isDone = true
+        kitchen:remove(makeIcing)
+      else
+        local extraCleanup = add({
+          text = cleanBag.text,
+          description = cleanBag.description,
+          runCost = cleanBag.runCost,
+          cleanupTrigger = cleanBag.cleanupTrigger,
+          depends = cleanBag.depends,
+        })
+        cleanBag.depends = { extraCleanup }
+      end
+      cleanBag.text = 'Toss burnt cupcakes'
+      cleanBag.description =
+        'Sometimes things don’t go\n'
+        .. 'as planned.'
+      cleanBag.runCost = 2
+      cleanBag.cleanupTrigger = putInOven
+    end
     local nextGatherIngedients = add({
       text = self.text,
       description = self.description,
@@ -407,6 +485,7 @@ local start = kitchenAction:extend({
       depends = { makeIcing },
       takeOut = takeOut,
       decorate = decorate,
+      cleanBag = cleanBag,
       run = self.run,
     })
     kitchenAction.run(self)
@@ -430,20 +509,39 @@ kitchen = styledColumn:extend({
     end
     local newActions = {}
     for i, action in ipairs(kitchen.actions) do
-      local ready = true
-      for j, depend in ipairs(action.depends) do
-        if not depend.isDone then
-          ready = false
-          break
+      if not action.isDone then
+        local ready = true
+        for j, depend in ipairs(action.depends) do
+          if not depend.isDone then
+            ready = false
+            break
+          end
         end
-      end
-      if ready then
-        kitchen:insert(action)
-      else
-        table.insert(newActions, action)
+        if ready then
+          kitchen:insert(action)
+        else
+          table.insert(newActions, action)
+        end
       end
     end
     self.actions = newActions
+  end,
+  getCleanupCost = function (self)
+    local cost = 0
+    local function addCost(action)
+      if action.cleanupTrigger then
+        if action.cleanupTrigger.isDone and not action.isDone then
+          cost = cost + action.runCost
+        end
+      end
+    end
+    for i, action in ipairs(kitchen.cards) do
+      addCost(action)
+    end
+    for i, action in ipairs(kitchen.actions) do
+      addCost(action)
+    end
+    return cost
   end,
 })
 
@@ -800,6 +898,7 @@ local endTurn = styledBoxCard:extend({
   clicked = function (self)
     if self.turnCounter == 0 then
       extraScreens.doneScreen.totalCupcakes = cupcakes.value
+      extraScreens.doneScreen.totalCleanupCost = kitchen:getCleanupCost()
       currentScreen = extraScreens.doneScreen
     else
       self.turnCounter = self.turnCounter - 1

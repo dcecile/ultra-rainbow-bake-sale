@@ -82,9 +82,13 @@ doneScreen = {
     local width, height = love.graphics.getDimensions()
     rectangleEngine.paintPadded(
       colors.textBox, 0, 0, width, height, -100)
+    local cleanupText = ''
+    if self.totalCleanupCost > 0 then
+      cleanupText = ' But getting help to clean up cost us ' .. self.totalCleanupCost .. ' cupcakes!'
+    end
     paintLines(colors.inverseText, {
       { 'Morgan', 'We baked ' .. self.totalCupcakes .. ' cupcakes!' },
-      { 'Alex', 'Great!' },
+      { 'Alex', 'Great!' .. cleanupText },
     })
   end,
   mousepressed = function (self, x, y, button, istouch)
