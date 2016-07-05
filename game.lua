@@ -283,7 +283,7 @@ local start = kitchenAction:extend({
   description =
     'They say that the first\n'
     .. 'step is always the hardest.',
-  runCost = 4,
+  runCost = 2,
   depends = {},
   takeOut = nil,
   decorate = nil,
@@ -546,8 +546,6 @@ kitchen = styledColumn:extend({
 })
 
 local playerCard = styledBoxCard:extend({
-  value = 0,
-  isBusy = false,
   refresh = function (self)
     if self:isClickable() then
       self.textColor = colors.player.foreground
@@ -761,7 +759,14 @@ local visionOfHope = hopeFeeling:extend({
   buyCost = 4,
 })
 
-local hopeMindset = deckCard:extend({
+local itGetsBetter = deckCard:extend({
+  text = 'It gets better',
+  description =
+    'Continual source of hope.\n'
+    .. 'Play this mindset, then\n'
+    .. 'activate to gain 2 hope.',
+  buyCost = 2,
+  playCost = 2,
   activateCost = 0,
   play = function (self, pay)
     self:tryMoveToMindset(function ()
@@ -769,30 +774,34 @@ local hopeMindset = deckCard:extend({
     end)
   end,
   activate = function (self, pay)
-    hope:add(self.playCost)
+    hope:add(2)
     self.delay = true
     pay()
   end,
 })
 
-local youreNotAlone = hopeMindset:extend({
-  text = 'You’re not alone',
+local knowledgeIsPower = deckCard:extend({
+  text = 'Knowledge is power',
   description =
-    'Continual source of hope.\n'
-    .. 'Play this mindset, then\n'
-    .. 'activate to gain 1 hope.',
-  buyCost = 1,
-  playCost = 1,
-})
-
-local itGetsBetter = hopeMindset:extend({
-  text = 'It gets better',
-  description =
-    'Continual source of hope.\n'
-    .. 'Play this mindset, then\n'
-    .. 'activate to gain 4 hope.',
-  buyCost = 4,
-  playCost = 4,
+    'Continual source of\n'
+    .. 'inspiration. Play this\n'
+    .. 'mindset, then activate to\n'
+    .. 'draw 1 card.',
+  buyCost = 2,
+  playCost = 2,
+  activateCost = 0,
+  play = function (self, pay)
+    self:tryMoveToMindset(function ()
+      pay()
+    end)
+  end,
+  activate = function (self, pay)
+    hand:tryDiscardToMax(1, self, function ()
+      drawPile:drawMany(1)
+      self.delay = true
+      pay()
+    end)
+  end,
 })
 
 local ennui = deckCard:extend({
@@ -901,8 +910,11 @@ local endTurn = styledBoxCard:extend({
       extraScreens.doneScreen.totalCleanupCost = kitchen:getCleanupCost()
       currentScreen = extraScreens.doneScreen
     else
-      self.turnCounter = self.turnCounter - 1
       discardPile:insert(ennui:extend())
+      if self.turnCounter < 9 then
+        discardPile:insert(ennui:extend())
+      end
+      self.turnCounter = self.turnCounter - 1
       startTurn()
     end
   end,
@@ -1025,8 +1037,8 @@ local libraryColumn = styledColumn:extend({
     libraryCard:make(visionOfHope),
     libraryCard:make(mildCuriosity),
     libraryCard:make(intenseCuriosity),
-    libraryCard:make(youreNotAlone),
     libraryCard:make(itGetsBetter),
+    libraryCard:make(knowledgeIsPower),
   }
 })
 
@@ -1085,6 +1097,8 @@ local screen = {
     mindset.cards = {}
     kitchen.cards = { start:extend() }
     kitchen.actions = {}
+    morgan.value = 0
+    alex.value = 0
     cupcakes.value = 0
     endTurn.turnCounter = 18
 
