@@ -1117,6 +1117,7 @@ local screen = {
     mindset.cards = {}
     kitchen.cards = { start:extend() }
     kitchen.actions = {}
+    kitchen.activeTimer = nil
     morgan.value = 0
     alex.value = 0
     cupcakes.value = 0
