@@ -229,6 +229,10 @@ local hope = styledBoxCard:extend({
   end,
 })
 
+local kitchen
+local morgan
+local alex
+
 local cupcakes = styledBoxCard:extend({
   text = 'Total cupcakes',
   description =
@@ -247,9 +251,22 @@ local cupcakes = styledBoxCard:extend({
   end,
 })
 
-local kitchen
-local morgan
-local alex
+local pendingCleanup = styledBoxCard:extend({
+  text = 'Pending cleanup',
+  description =
+    'Don’t forget to clean up\n'
+    .. 'the kitchen. During baking\n'
+    .. 'is less stressful than after\n'
+    .. 'baking.',
+  textColor = colors.cupcakes.foreground,
+  borderColor = colors.cupcakes.foreground,
+  getBoxColors = function (self)
+    return colors.cupcakes
+  end,
+  getBoxValue = function (self)
+    return kitchen:getCleanupCost()
+  end,
+})
 
 local kitchenAction = styledBoxCard:extend({
   isDone = false,
@@ -907,7 +924,9 @@ local endTurn = styledBoxCard:extend({
   clicked = function (self)
     if self.turnCounter == 0 then
       extraScreens.doneScreen.totalCupcakes = cupcakes.value
-      extraScreens.doneScreen.totalCleanupCost = kitchen:getCleanupCost()
+      extraScreens.doneScreen.totalCleanupCost = math.min(
+        cupcakes.value,
+        kitchen:getCleanupCost())
       currentScreen = extraScreens.doneScreen
     else
       discardPile:insert(ennui:extend())
@@ -999,6 +1018,7 @@ local bakingColumn = styledColumn:extend({
   top = 60,
   cards = {
     cupcakes,
+    pendingCleanup,
     styledSpacerSymmetrical:extend(),
     morgan,
     alex,
