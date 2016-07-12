@@ -1,3 +1,4 @@
+local currentScreen = require('currentScreen')
 local proto = require('proto')
 local rectangleEngine = require('rectangleEngine')
 local textEngine = require('textEngine')
@@ -193,6 +194,16 @@ local column = proto.object:extend({
   minHeight = 0,
 })
 
+local screen = proto.object:extend({
+  show = function (self)
+    currentScreen.set(self)
+    love.graphics.setBackgroundColor(self.backgroundColor)
+  end,
+  showNext = function (self, ...)
+    self.next:show(...)
+  end,
+})
+
 return {
   cursor = cursor,
   targeting = targeting,
@@ -201,4 +212,5 @@ return {
   spacer = spacer,
   heading = heading,
   column = column,
+  screen = screen,
 }

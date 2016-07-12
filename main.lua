@@ -1,20 +1,21 @@
-local extraScreens = require('extraScreens')
+local creditsScreen = require('creditsScreen')
+local currentScreen = require('currentScreen')
 local game = require('game')
 local proto = require('proto')
+local titleScreen = require('titleScreen')
 local utils = require('utils')
 
 music = nil
 credits = nil
 local quitShortcut = false
 
-extraScreens.introScreen.gameScreen = game.screen
-
-currentScreen = extraScreens.titleScreen
+titleScreen.screen:show()
+creditsScreen.screen.next = titleScreen.screen
 
 if os.getenv('DEBUG_URBS') then
-  extraScreens.titleScreen.mute = true
+  titleScreen.screen.mute = true
   quitShortcut = true
-  currentScreen = game.screen
+  game.screen:show()
   game.screen:start()
 end
 
@@ -46,9 +47,9 @@ function love.keypressed(key, isrepeat)
 end
 
 function love.mousepressed(x, y, button, istouch)
-  currentScreen:mousepressed(x, y, button, istouch)
+  currentScreen.get():mousepressed(x, y, button, istouch)
 end
 
 function love.draw()
-  currentScreen:paint()
+  currentScreen.get():paint()
 end

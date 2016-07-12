@@ -79,10 +79,10 @@ local function paintStar(color, x, y, angle)
   end
 end
 
-local screen = {
+local screen = ui.screen:extend({
+  backgroundColor = colors.lightBackground,
   paint = function (self)
     ui.cursor:clickable()
-    love.graphics.setBackgroundColor(colors.lightBackground)
 
     local screenWidth, screenHeight = love.graphics.getDimensions()
     rectangleEngine.paintPadded(
@@ -137,10 +137,14 @@ local screen = {
       165 + cupcakeY + 150,
       math.pi * (5 / 6 - 1 / 8))
   end,
-  mousepressed = function (self, x, y, button, istouch)
-    currentScreen = self.gameScreen
+  show = function (self, next)
+    self.next = next
+    ui.screen.show(self)
   end,
-}
+  mousepressed = function (self, x, y, button, istouch)
+    self:showNext()
+  end,
+})
 
 return {
   screen = screen

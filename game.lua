@@ -1,7 +1,6 @@
 local colors = require('colors')
 local cupcakeScreen = require('cupcakeScreen')
-local extraScreens = require('extraScreens')
-local proto = require('proto')
+local doneScreen = require('doneScreen')
 local rectangleEngine = require('rectangleEngine')
 local textEngine = require('textEngine')
 local ui = require('ui')
@@ -295,6 +294,8 @@ local kitchenAction = styledBoxCard:extend({
   end,
 })
 
+local screen
+
 local start = kitchenAction:extend({
   text = 'Start',
   description =
@@ -459,7 +460,7 @@ local start = kitchenAction:extend({
       run = function (self)
         kitchenAction.run(self)
         cupcakes.value = cupcakes.value + 12
-        currentScreen = cupcakeScreen.screen
+        cupcakeScreen.screen:show(screen)
       end,
     })
     local cleanBag = add({
@@ -923,11 +924,11 @@ local endTurn = styledBoxCard:extend({
     .. 'drawn.',
   clicked = function (self)
     if self.turnCounter == 0 then
-      extraScreens.doneScreen.totalCupcakes = cupcakes.value
-      extraScreens.doneScreen.totalCleanupCost = math.min(
+      screen:showNext(
         cupcakes.value,
-        kitchen:getCleanupCost())
-      currentScreen = extraScreens.doneScreen
+        math.min(
+          cupcakes.value,
+          kitchen:getCleanupCost()))
     else
       discardPile:insert(ennui:extend())
       if self.turnCounter < 9 then
@@ -1062,8 +1063,9 @@ local libraryColumn = styledColumn:extend({
   }
 })
 
-local screen = {
-  color = colors.lightBackground,
+screen = ui.screen:extend({
+  backgroundColor = colors.lightBackground,
+  next = doneScreen.screen,
   shapes = { bakingColumn, mainColumn, libraryColumn, infoBox },
   refresh = function (self)
     local mouseX, mouseY = love.mouse.getPosition()
@@ -1083,7 +1085,6 @@ local screen = {
   end,
   paint = function (self)
     self:refresh()
-    love.graphics.setBackgroundColor(self.color)
     for i, shape in ipairs(self.shapes) do
       shape:paint()
     end
@@ -1130,9 +1131,7 @@ local screen = {
     drawPile:shuffle()
     startTurn()
   end,
-}
-
-cupcakeScreen.screen.gameScreen = screen
+})
 
 return {
   screen = screen

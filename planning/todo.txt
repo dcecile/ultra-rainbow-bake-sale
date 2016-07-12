@@ -1,6 +1,18 @@
+Love load
+Sound engine
 Gain ennui animation
 Baking sets
 Slack time indicator
+Following tasks indicator
 Write GSA members baking notes
 Write full emotional system notes
 Fix decorate with icing display glitch
+Resolution scaling
+Keyboard shortcuts
+Keyboard shortcut hints
+Version number
+More credits
+Settings screen
+Mute music button
+Fullscreen button
+Character idle actions
