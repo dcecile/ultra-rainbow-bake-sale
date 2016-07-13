@@ -5,18 +5,7 @@ local proto = require('proto')
 local titleScreen = require('titleScreen')
 local utils = require('utils')
 
-credits = nil
 local quitShortcut = false
-
-titleScreen.screen:show()
-creditsScreen.screen.next = titleScreen.screen
-
-if os.getenv('DEBUG_URBS') then
-  titleScreen.screen.mute = true
-  quitShortcut = true
-  game.screen:show()
-  game.screen:start()
-end
 
 function love.load()
   love.window.setTitle('Ultra Rainbow Bake Sale')
@@ -28,10 +17,16 @@ function love.load()
       msaa = 8,
       fullscreen = false,
     })
-  bigFont = love.graphics.newFont(24)
-  credits = love.filesystem.read('credits.txt')
-  love.graphics.setLineWidth(1)
-  love.graphics.setLineStyle('rough')
+
+  titleScreen.screen:show()
+  creditsScreen.screen.next = titleScreen.screen
+
+  if os.getenv('DEBUG_URBS') then
+    titleScreen.screen.mute = true
+    quitShortcut = true
+    game.screen:show()
+    game.screen:start()
+  end
 end
 
 function love.keypressed(key, isrepeat)

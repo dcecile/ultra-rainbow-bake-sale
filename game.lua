@@ -1134,5 +1134,5 @@ screen = ui.screen:extend({
 })
 
 return {
-  screen = screen
+  screen = screen,
 }

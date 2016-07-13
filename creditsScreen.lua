@@ -37,6 +37,10 @@ screen = ui.screen:extend({
     margin = 30,
     cards = { newGame, exit }
   }),
+  show = function (self)
+    self.credits = love.filesystem.read('credits.txt')
+    ui.screen.show(self)
+  end,
   paint = function (self)
     local mouseX, mouseY = love.mouse.getPosition()
     ui.cursor:clear()
@@ -47,7 +51,7 @@ screen = ui.screen:extend({
       ui.cursor:clickable()
     end)
 
-    textEngine.paint(colors.inverseText, 'big', credits, 20, 20)
+    textEngine.paint(colors.inverseText, 'big', self.credits, 20, 20)
     self.buttons:paint()
   end,
   mousepressed = function (self, x, y, button, istouch)
