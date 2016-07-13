@@ -1,3 +1,4 @@
+local audioEngine = require('audioEngine')
 local colors = require('colors')
 local creditsScreen = require('creditsScreen')
 local dialogueScreen = require('dialogueScreen')
@@ -20,7 +21,7 @@ local screen = dialogueScreen.screen:extend({
     dialogueScreen.screen.show(self)
   end,
   mousepressed = function (self, x, y, button, istouch)
-    love.audio.stop()
+    audioEngine.stopMusic()
     self:showNext()
   end,
 })

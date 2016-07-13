@@ -1,3 +1,4 @@
+local audioEngine = require('audioEngine')
 local colors = require('colors')
 local introScreen = require('introScreen')
 local textEngine = require('textEngine')
@@ -20,7 +21,7 @@ local screen = ui.screen:extend({
   end,
   mousepressed = function (self, x, y, button, istouch)
     if not self.mute then
-      love.audio.play(music)
+      audioEngine.startMusic()
     end
     self:showNext()
   end,

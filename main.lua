@@ -5,7 +5,6 @@ local proto = require('proto')
 local titleScreen = require('titleScreen')
 local utils = require('utils')
 
-music = nil
 credits = nil
 local quitShortcut = false
 
@@ -30,9 +29,6 @@ function love.load()
       fullscreen = false,
     })
   bigFont = love.graphics.newFont(24)
-  music = love.audio.newSource('bensound-anewbeginning.mp3')
-  music:setVolume(0.3)
-  music:setLooping(true)
   credits = love.filesystem.read('credits.txt')
   love.graphics.setLineWidth(1)
   love.graphics.setLineStyle('rough')
