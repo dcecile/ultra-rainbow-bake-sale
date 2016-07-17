@@ -2,6 +2,9 @@ local currentScreen = require('currentScreen')
 local proto = require('proto')
 local rectangleEngine = require('rectangleEngine')
 local textEngine = require('textEngine')
+local vectors = require('vectors')
+
+local vec2 = vectors.vec2
 
 local cursor = proto.object:extend({
   isTargeting = false,
@@ -110,6 +113,16 @@ local rectangle = proto.object:extend({
       end
     end
   end,
+  getLeftCenter = function (self, margin)
+    return vec2(
+      self.left + margin,
+      self.top + self.height / 2)
+  end,
+  getRightCenter = function (self, margin)
+    return vec2(
+      self.left + self.width - margin,
+      self.top + self.height / 2)
+  end,
 })
 
 local spacer = rectangle:extend({
@@ -201,6 +214,8 @@ local screen = proto.object:extend({
   end,
   showNext = function (self, ...)
     self.next:show(...)
+  end,
+  update = function (self, time)
   end,
 })
 

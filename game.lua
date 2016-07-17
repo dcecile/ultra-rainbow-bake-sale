@@ -1,6 +1,7 @@
 local colors = require('colors')
 local cupcakeScreen = require('cupcakeScreen')
 local doneScreen = require('doneScreen')
+local particleEngine = require('particleEngine')
 local rectangleEngine = require('rectangleEngine')
 local textEngine = require('textEngine')
 local ui = require('ui')
@@ -8,6 +9,16 @@ local ui = require('ui')
 local styledColumn = ui.column:extend({
   margin = 10
 })
+
+local columnSpacing = 70
+
+local styledCardParticle = particleEngine.cardParticle:extend({
+  duration = 500,
+  color = colors.cardParticle,
+  size = 16,
+})
+
+local pathRadius = columnSpacing / 2
 
 local boxCard = ui.card:extend({
   paint = function (self)
@@ -638,10 +649,24 @@ local libraryHeading = styledHeading:extend({
 })
 
 local libraryCard = styledBoxCard:extend({
+  take = function (self, count)
+    local newCard = self.card:extend()
+    discardPile:insert(newCard)
+    particleEngine.add(styledCardParticle:extend({
+      origin = self:getLeftCenter(styledCardParticle.size / 2),
+      target = discardPile:getRightCenter(styledCardParticle.size / 2),
+      duration = self.animationDuration,
+      path = particleEngine.essPath(pathRadius),
+      next = function ()
+        if count > 1 then
+          self:take(count - 1)
+        end
+      end,
+    }))
+  end,
   clicked = function (self)
     hope:tryPay(self.card.buyCost, function ()
-      local newCard = self.card:extend()
-      discardPile:insert(newCard)
+      self:take(1)
     end)
   end,
   make = function (self, card)
@@ -697,6 +722,11 @@ local deckCard = styledBoxCard:extend({
   moveToHand = function (self)
     self.column:remove(self)
     hand:insert(self)
+    particleEngine.add(styledCardParticle:extend({
+      origin = drawPile:getLeftCenter(styledCardParticle.size / 2),
+      target = self:getLeftCenter(styledCardParticle.size / 2),
+      path = particleEngine.seePath(pathRadius, -1),
+    }))
     self.column = hand
     self.action = self.play
     self.cost = self.playCost
@@ -704,8 +734,15 @@ local deckCard = styledBoxCard:extend({
   end,
   tryMoveToMindset = function (self, block)
     mindset:tryDiscardToMax(1, self, function ()
+      local origin = self:getLeftCenter(styledCardParticle.size / 2)
       self.column:remove(self)
       mindset:insert(self)
+      local target = self:getLeftCenter(styledCardParticle.size / 2)
+      particleEngine.add(styledCardParticle:extend({
+        origin = origin,
+        target = target,
+        path = particleEngine.seePath(pathRadius, -1),
+      }))
       self.column = mindset
       self.action = self.activate
       self.cost = self.activateCost
@@ -714,6 +751,11 @@ local deckCard = styledBoxCard:extend({
     end)
   end,
   moveToDiscard = function (self)
+    particleEngine.add(styledCardParticle:extend({
+      origin = self:getRightCenter(styledCardParticle.size / 2),
+      target = discardPile:getRightCenter(styledCardParticle.size / 2),
+      path = particleEngine.seePath(pathRadius, 1),
+    }))
     self.column:remove(self)
     discardPile:insert(self)
     self.column = discardPile
@@ -829,10 +871,15 @@ local ennui = deckCard:extend({
     .. 'Un-motivation. Fatigue.\n'
     .. 'Cannot be played.',
   playCost = math.huge,
+  buyCost = math.huge,
   getBoxValue = function (self)
     return '∞'
   end,
 })
+
+local ennuiLibraryCard = libraryCard:make(ennui)
+ennuiLibraryCard.getBoxValue = ennui.getBoxValue
+ennuiLibraryCard.animationDuration = styledCardParticle.duration * 2
 
 local curiosity = deckCard:extend({
   play = function (self, pay)
@@ -840,8 +887,8 @@ local curiosity = deckCard:extend({
       self.playCost + 1,
       #drawPile.cards + #discardPile.cards)
     hand:tryDiscardToMax(cardsToDraw - 1, self, function ()
-      drawPile:drawMany(cardsToDraw)
       self:moveToDiscard()
+      drawPile:drawMany(cardsToDraw)
       pay()
     end)
   end,
@@ -930,9 +977,10 @@ local endTurn = styledBoxCard:extend({
           cupcakes.value,
           kitchen:getCleanupCost()))
     else
-      discardPile:insert(ennui:extend())
-      if self.turnCounter < 9 then
-        discardPile:insert(ennui:extend())
+      if self.turnCounter >= 9 then
+        ennuiLibraryCard:take(1)
+      else
+        ennuiLibraryCard:take(2)
       end
       self.turnCounter = self.turnCounter - 1
       startTurn()
@@ -1030,7 +1078,7 @@ local bakingColumn = styledColumn:extend({
 })
 
 local mainColumn = styledColumn:extend({
-  left = bakingColumn.left + styledBoxCard.width + 70,
+  left = bakingColumn.left + styledBoxCard.width + columnSpacing,
   top = 60,
   cards = {
     discardPile,
@@ -1048,12 +1096,13 @@ local mainColumn = styledColumn:extend({
 })
 
 local libraryColumn = styledColumn:extend({
-  left = mainColumn.left + styledBoxCard.width + 70,
+  left = mainColumn.left + styledBoxCard.width + columnSpacing,
   top = 60,
   cards = {
     hope,
     styledSpacer:extend(),
     libraryHeading,
+    ennuiLibraryCard,
     libraryCard:make(feelingOfHope),
     libraryCard:make(visionOfHope),
     libraryCard:make(mildCuriosity),
@@ -1067,6 +1116,10 @@ screen = ui.screen:extend({
   backgroundColor = colors.lightBackground,
   next = doneScreen.screen,
   shapes = { bakingColumn, mainColumn, libraryColumn, infoBox },
+  update = function (self, time)
+    particleEngine.update(time)
+    self:refresh()
+  end,
   refresh = function (self)
     local mouseX, mouseY = love.mouse.getPosition()
     ui.cursor:clear()
@@ -1084,7 +1137,7 @@ screen = ui.screen:extend({
     end
   end,
   paint = function (self)
-    self:refresh()
+    particleEngine.paint()
     for i, shape in ipairs(self.shapes) do
       shape:paint()
     end

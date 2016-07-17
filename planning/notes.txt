@@ -28,6 +28,7 @@
   - re-play an old mana
   - remove discarded card for mana
   - duplicate a card (pay fixed mana, discard all 3)
+  - pay normal cost to gain card directly to hand
 - base attributes
   - play cost
   - buy cost

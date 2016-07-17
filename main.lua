@@ -21,7 +21,7 @@ function love.load()
   titleScreen.screen:show()
   creditsScreen.screen.next = titleScreen.screen
 
-  if os.getenv('DEBUG_URBS') then
+  if tonumber(os.getenv('DEBUG_URBS')) == 1 then
     titleScreen.screen.mute = true
     quitShortcut = true
     game.screen:show()
@@ -39,6 +39,10 @@ end
 
 function love.mousepressed(x, y, button, istouch)
   currentScreen.get():mousepressed(x, y, button, istouch)
+end
+
+function love.update(time)
+  currentScreen.get():update(time * 1000)
 end
 
 function love.draw()

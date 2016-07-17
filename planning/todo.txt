@@ -1,4 +1,3 @@
-Gain ennui animation
 Baking sets
 Slack time indicator
 Following tasks indicator
@@ -14,3 +13,11 @@ Settings screen
 Mute music button
 Fullscreen button
 Character idle actions
+Blocking animations
+Coroutine animations
+Text animations
+Box animations
+Remove-card animation
+Hope animation
+Baking animation
+Card slot animation
