@@ -846,7 +846,7 @@ local knowledgeIsPower = deckCard:extend({
     'Continual source of\n'
     .. 'inspiration. Play this\n'
     .. 'mindset, then activate to\n'
-    .. 'draw 1 card.',
+    .. 'draw 2 cards.',
   buyCost = 2,
   playCost = 2,
   activateCost = 0,
@@ -856,8 +856,8 @@ local knowledgeIsPower = deckCard:extend({
     end)
   end,
   activate = function (self, pay)
-    hand:tryDiscardToMax(1, self, function ()
-      drawPile:drawMany(1)
+    hand:tryDiscardToMax(2, self, function ()
+      drawPile:drawMany(2)
       self.delay = true
       pay()
     end)
