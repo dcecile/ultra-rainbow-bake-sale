@@ -1,4 +1,3 @@
-Baking sets
 Slack time indicator
 Following tasks indicator
 Write GSA members baking notes

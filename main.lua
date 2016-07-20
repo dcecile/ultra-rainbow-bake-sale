@@ -3,7 +3,6 @@ local currentScreen = require('currentScreen')
 local game = require('game')
 local proto = require('proto')
 local titleScreen = require('titleScreen')
-local utils = require('utils')
 
 local quitShortcut = false
 

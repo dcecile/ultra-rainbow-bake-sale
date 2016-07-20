@@ -5,6 +5,7 @@ local particleEngine = require('particleEngine')
 local rectangleEngine = require('rectangleEngine')
 local textEngine = require('textEngine')
 local ui = require('ui')
+local utils = require('utils')
 
 local styledColumn = ui.column:extend({
   margin = 10
@@ -300,244 +301,248 @@ local kitchenAction = styledBoxCard:extend({
   run = function (self)
     self.isDone = true
     if not self.isHidden then
-      kitchen:remove(self)
+      self.batch.active:remove(self)
     end
+  end,
+  getCleanupCost = function (self)
+    if self.cleanupTrigger then
+      if self.cleanupTrigger.isDone and not self.isDone then
+        return self.runCost
+      end
+    end
+    return 0
   end,
 })
 
 local screen
 
-local start = kitchenAction:extend({
-  text = 'Start',
-  description =
-    'They say that the first\n'
-    .. 'step is always the hardest.',
-  runCost = 2,
-  depends = {},
-  takeOut = nil,
-  decorate = nil,
-  cleanBag = nil,
-  run = function (self)
-    local function add(properties)
-      local card = kitchenAction:extend(properties)
-      if not card.isHidden then
-        table.insert(kitchen.actions, card)
-      end
-      return card
+local function addBatchActions(batch, precedingActions)
+  local function add(properties)
+    local card = kitchenAction:extend(properties)
+    card.batch = batch
+    if not card.isHidden then
+      table.insert(batch.actions, card)
     end
-    local measureDry = add({
-      text = 'Measure dry',
+    return card
+  end
+
+  if not precedingActions then
+    precedingActions = {}
+  end
+
+  batch.active = styledColumn:extend({
+    minHeight = styledBoxCard.height * 3 + styledColumn.margin * 2,
+    cards = {},
+  })
+  batch.cards = {
+    styledSpacer:extend(),
+    styledHeading:extend({
+      text = 'Batch #' .. batch.number,
       description =
-        'Measure out the flours,\n'
-        .. 'sugars, salts, spices, and\n'
-        .. 'rising agents.',
-      runCost = 1,
-      depends = { self },
-    })
-    local measureWet = add({
-      text = 'Measure wet',
-      description =
-        'Measure out the milk and\n'
-        .. 'oil. Don’t forget vanilla.',
-      runCost = 1,
-      depends = { measureDry },
-    })
-    local cleanCups = add({
-      text = 'Clean measuring cups',
-      description =
-        'Responsibility means\n'
-        .. 'cleaning up after making\n'
-        .. 'a mess.',
-      runCost = 2,
-      cleanupTrigger = measureDry,
-      depends = { measureWet, self.cleanBag },
-    })
-    local mixDry = add({
-      text = 'Mix dry',
-      description =
-        'Sift to avoid packing. Mix\n'
-        .. 'well. The fun is getting\n'
-        .. 'started.',
-      runCost = 1,
-      depends = { measureDry },
-    })
-    local mixAll = add({
-      text = 'Mix together',
-      description =
-        'Pour into the well. Mix only\n'
-        .. 'until dry ingredients are\n'
-        .. 'moistened. Basically done.',
-      runCost = 2,
-      depends = { mixDry, measureWet },
-    })
-    local pour = add({
-      text = 'Pour batter',
-      description =
-        'Fill each cupcake liner\n'
-        .. 'about three quarters full.\n'
-        .. 'The journey is the\n'
-        .. 'destination.',
-      runCost = 4,
-      depends = { mixAll, self.takeOut },
-    })
-    local cleanBowl = add({
-      text = 'Clean mixing bowl',
-      description =
-        'No matter how big the\n'
-        .. 'problem.',
-      runCost = 4,
-      cleanupTrigger = mixDry,
-      depends = { cleanCups, pour },
-    })
-    local cleanUtensils = add({
-      text = 'Clean utensils',
-      description =
-        'But friends will always be\n'
-        .. 'there to lend a hand.',
-      runCost = 2,
-      cleanupTrigger = measureDry,
-      depends = { cleanBowl },
-    })
-    local bakeTimer = add({
-      text = 'Bake timer',
-      runCost = 4,
-      depends = {},
-      isHidden = true,
-    })
-    local burnt
-    local putInOven = add({
-      text = 'Put in oven',
-      description =
-        'In it goes. Hopefully the\n'
-        .. 'portions are correct. Be\n'
-        .. 'patient, and accept the\n'
-        .. 'flow of time.',
-      runCost = 6,
-      depends = { pour },
-      run = function (self)
-        kitchenAction.run(self)
-        kitchen.activeTimer = function ()
-          bakeTimer.runCost = bakeTimer.runCost - 1
-          if bakeTimer.runCost == 0 then
-            bakeTimer:run()
-          elseif bakeTimer.runCost == -1 then
-            kitchen.activeTimer = nil
-            burnt()
-          end
+        'Follow the recipe. Some\n'
+        .. 'tasks are harder than\n'
+        .. 'others. Morgan and Alex\n'
+        .. 'are keen to start.',
+    }),
+    batch.active,
+  }
+  batch.actions = {}
+
+  local nextPrecedingActions
+
+  local measureDry = add({
+    text = 'Measure dry',
+    description =
+      'Measure out the flours,\n'
+      .. 'sugars, salts, spices, and\n'
+      .. 'rising agents.',
+    runCost = 1,
+    depends = {},
+  })
+  local measureWet = add({
+    text = 'Measure wet',
+    description =
+      'Measure out the milk and\n'
+      .. 'oil. Don’t forget vanilla.',
+    runCost = 1,
+    depends = {},
+  })
+  local cleanCups = add({
+    text = 'Clean measuring cups',
+    description =
+      'Responsibility means\n'
+      .. 'cleaning up after making\n'
+      .. 'a mess.',
+    runCost = 2,
+    cleanupTrigger = measureDry,
+    depends = { measureDry, measureWet },
+  })
+  local mixAll = add({
+    text = 'Mix together',
+    description =
+      'Sift to avoid packing. Pour\n'
+      .. 'into the well. Mix only until\n'
+      .. 'dry ingredients are\n'
+      .. 'moistened. Basically done.',
+    runCost = 2,
+    depends = { measureDry, measureWet },
+  })
+  local pour = add({
+    text = 'Pour batter',
+    description =
+      'Fill each cupcake liner\n'
+      .. 'about three quarters full.\n'
+      .. 'The journey is the\n'
+      .. 'destination.',
+    runCost = 4,
+    depends = { mixAll },
+  })
+  local cleanBowl = add({
+    text = 'Clean mixing bowl',
+    description =
+      'No matter how big the\n'
+      .. 'problem.',
+    runCost = 4,
+    cleanupTrigger = mixAll,
+    depends = { cleanCups, pour },
+  })
+  local cleanUtensils = add({
+    text = 'Clean utensils',
+    description =
+      'But friends will always be\n'
+      .. 'there to lend a hand.',
+    runCost = 2,
+    cleanupTrigger = measureDry,
+    depends = { cleanBowl },
+  })
+  local bakeTimer = add({
+    text = 'Bake timer',
+    runCost = 3,
+    depends = {},
+    isHidden = true,
+  })
+  local burnt
+  local putInOven = add({
+    text = 'Put in oven',
+    description =
+      'In it goes. Hopefully the\n'
+      .. 'portions are correct. Be\n'
+      .. 'patient, and accept the\n'
+      .. 'flow of time.',
+    runCost = 6,
+    depends = { pour, precedingActions.takeOut },
+    run = function (self)
+      kitchenAction.run(self)
+      batch.activeTimer = function ()
+        bakeTimer.runCost = bakeTimer.runCost - 1
+        if bakeTimer.runCost == 0 then
+          bakeTimer:run()
+        elseif bakeTimer.runCost == -1 then
+          batch.activeTimer = nil
+          burnt()
         end
-      end,
-    })
-    local takeOut = add({
-      text = 'Take out',
-      description =
-        'It’s done! But it does’t look\n'
-        .. 'like cupcakes.',
-      runCost = 4,
-      depends = { bakeTimer },
-      run = function (self)
-        kitchenAction.run(self)
-        kitchen.activeTimer = nil
       end
-    })
-    local cleanSheet = add({
-      text = 'Clean baking sheet',
-      description =
-        'They’ll understand that\n'
-        .. 'some messes are fun and\n'
-        .. 'others are funny.',
-      runCost = 1,
-      cleanupTrigger = takeOut,
-      depends = { cleanUtensils, takeOut },
-    })
-    local makeIcing = add({
-      text = 'Make icing',
-      description =
-        'Very, very sweet. Use\n'
-        .. 'all-natural food colouring.\n'
-        .. 'The present self prepares\n'
-        .. 'for the future self.',
-      runCost = 6,
-      depends = { mixAll },
-    })
-    local decorate = add({
-      text = 'Decorate with icing',
-      description =
-        'Ah, the finishing touch. It’s\n'
-        .. 'okay to get excited here\n'
-        .. 'and just go wild. Show\n'
-        .. 'them your free spirit!',
-      runCost = 10,
-      depends = { makeIcing, takeOut, self.decorate },
-      run = function (self)
-        kitchenAction.run(self)
-        cupcakes.value = cupcakes.value + 12
-        cupcakeScreen.screen:show(screen)
-      end,
-    })
-    local cleanBag = add({
-      text = 'Clean piping bag',
-      description =
-        'In the end, life itself is one\n'
-        .. 'big series of messes.',
-      runCost = 6,
-      cleanupTrigger = makeIcing,
-      depends = { cleanSheet, decorate },
-    })
-    function burnt()
-      takeOut.isDone = true
-      decorate.isDone = true
-      kitchen:remove(takeOut)
-      if not makeIcing.isDone then
-        makeIcing.isDone = true
-        kitchen:remove(makeIcing)
-      else
-        local extraCleanup = add({
-          text = cleanBag.text,
-          description = cleanBag.description,
-          runCost = cleanBag.runCost,
-          cleanupTrigger = cleanBag.cleanupTrigger,
-          depends = cleanBag.depends,
-        })
-        cleanBag.depends = { extraCleanup }
-      end
-      cleanBag.text = 'Toss burnt cupcakes'
-      cleanBag.description =
-        'Sometimes things don’t go\n'
-        .. 'as planned.'
-      cleanBag.runCost = 2
-      cleanBag.cleanupTrigger = putInOven
+    end,
+  })
+  local takeOut = add({
+    text = 'Take out',
+    description =
+      'It’s done! But it does’t look\n'
+      .. 'like cupcakes.',
+    runCost = 4,
+    depends = { bakeTimer },
+    run = function (self)
+      kitchenAction.run(self)
+      batch.activeTimer = nil
     end
-    local nextGatherIngedients = add({
-      text = self.text,
-      description = self.description,
-      runCost = self.runCost,
-      depends = { makeIcing },
-      takeOut = takeOut,
-      decorate = decorate,
-      cleanBag = cleanBag,
-      run = self.run,
-    })
-    kitchenAction.run(self)
-  end,
-})
+  })
+  local cleanSheet = add({
+    text = 'Clean baking sheet',
+    description =
+      'They’ll understand that\n'
+      .. 'some messes are fun and\n'
+      .. 'others are funny.',
+    runCost = 1,
+    cleanupTrigger = takeOut,
+    depends = { cleanUtensils, takeOut },
+  })
+  local makeIcing = add({
+    text = 'Make icing',
+    description =
+      'Very, very sweet. Use\n'
+      .. 'all-natural food colouring.\n'
+      .. 'The present self prepares\n'
+      .. 'for the future self.',
+    runCost = 6,
+    depends = { mixAll, precedingActions.cleanBag },
+    run = function (self)
+      kitchenAction.run(self)
+      batch.startBatch(nextPrecedingActions)
+    end,
+  })
+  local decorate = add({
+    text = 'Decorate with icing',
+    description =
+      'Ah, the finishing touch. It’s\n'
+      .. 'okay to get excited here\n'
+      .. 'and just go wild. Show\n'
+      .. 'them your free spirit!',
+    runCost = 10,
+    depends = { makeIcing, takeOut },
+    run = function (self)
+      kitchenAction.run(self)
+      cupcakes.value = cupcakes.value + 12
+      cupcakeScreen.screen:show(screen)
+    end,
+  })
+  local cleanBag = add({
+    text = 'Clean piping bag',
+    description =
+      'In the end, life itself is one\n'
+      .. 'big series of messes.',
+    runCost = 6,
+    cleanupTrigger = makeIcing,
+    depends = { cleanSheet, decorate },
+  })
+  function burnt()
+    takeOut.isDone = true
+    decorate.isDone = true
+    batch.active:remove(takeOut)
+    if not makeIcing.isDone then
+      makeIcing.isDone = true
+      batch.active:remove(makeIcing)
+    else
+      local extraCleanup = add({
+        text = cleanBag.text,
+        description = cleanBag.description,
+        runCost = cleanBag.runCost,
+        cleanupTrigger = cleanBag.cleanupTrigger,
+        depends = cleanBag.depends,
+      })
+      cleanBag.depends = { extraCleanup }
+    end
+    cleanBag.text = 'Toss burnt cupcakes'
+    cleanBag.description =
+      'Sometimes things don’t go\n'
+      .. 'as planned.'
+    cleanBag.runCost = 2
+    cleanBag.cleanupTrigger = putInOven
+  end
+  nextPrecedingActions = {
+    takeOut = takeOut,
+    cleanBag = cleanBag,
+    makeIcing = makeIcing,
+  }
+end
 
-local kitchenHeading = styledHeading:extend({
-  text = 'Kitchen',
-  description =
-    'Follow the recipe. Some\n'
-    .. 'tasks are harder than\n'
-    .. 'others. Morgan and Alex\n'
-    .. 'are keen to start.',
-})
-
-kitchen = styledColumn:extend({
+local batch = styledColumn:extend({
   activeTimer = nil,
-  tick = function (self)
+  tick = function (self, remove)
     if self.activeTimer then
       self.activeTimer()
     end
     local newActions = {}
-    for i, action in ipairs(kitchen.actions) do
+    for i, action in ipairs(self.actions) do
       if not action.isDone then
         local ready = true
         for j, depend in ipairs(action.depends) do
@@ -547,30 +552,48 @@ kitchen = styledColumn:extend({
           end
         end
         if ready then
-          kitchen:insert(action)
+          self.active:insert(action)
         else
           table.insert(newActions, action)
         end
       end
     end
     self.actions = newActions
+    if #self.actions == 0 and #self.active.cards == 0 then
+      remove()
+    end
   end,
   getCleanupCost = function (self)
-    local cost = 0
-    local function addCost(action)
-      if action.cleanupTrigger then
-        if action.cleanupTrigger.isDone and not action.isDone then
-          cost = cost + action.runCost
-        end
-      end
+    return utils.sum(self.active.cards, utils.method.getCleanupCost)
+      + utils.sum(self.actions, utils.method.getCleanupCost)
+  end,
+})
+
+kitchen = styledColumn:extend({
+  tick = function (self)
+    local removals = {}
+    local function remove(i)
+      table.insert(removals, i, 1)
     end
-    for i, action in ipairs(kitchen.cards) do
-      addCost(action)
+    for i, batch in ipairs(self.cards) do
+      batch:tick(function () remove(i) end)
     end
-    for i, action in ipairs(kitchen.actions) do
-      addCost(action)
+    for i, j in ipairs(removals) do
+      table.remove(self.cards, j)
     end
-    return cost
+  end,
+  getCleanupCost = function (self)
+    return utils.sum(self.cards, utils.method.getCleanupCost)
+  end,
+  startBatch = function (self, number, ...)
+    local newBatch = batch:extend({
+      number = number,
+      startBatch = function (...)
+        self:startBatch(number + 1, ...)
+      end,
+    })
+    addBatchActions(newBatch, ...)
+    self:insert(newBatch)
   end,
 })
 
@@ -609,9 +632,11 @@ local playerCard = styledBoxCard:extend({
   end,
   isClickable = function (self)
     if not self.isBusy then
-      for i, card in ipairs(kitchen.cards) do
-        if hope.value >= card.runCost then
-          return true
+      for i, batch in ipairs(kitchen.cards) do
+        for j, action in ipairs(batch.active.cards) do
+          if hope.value >= action.runCost then
+            return true
+          end
         end
       end
     end
@@ -1027,7 +1052,7 @@ local infoBox = ui.rectangle:extend({
   width = styledBoxCard.width,
   height = 320,
   refresh = function (self)
-    self.left = cupcakes.left
+    self.left = hope.left
     self.top = kitchenMinutes.top + kitchenMinutes.height - self.height
   end,
   paint = function (self)
@@ -1071,8 +1096,6 @@ local bakingColumn = styledColumn:extend({
     styledSpacerSymmetrical:extend(),
     morgan,
     alex,
-    styledSpacer:extend(),
-    kitchenHeading,
     kitchen,
   }
 })
@@ -1169,9 +1192,9 @@ screen = ui.screen:extend({
     drawPile.cards = {}
     hand.cards = {}
     mindset.cards = {}
-    kitchen.cards = { start:extend() }
-    kitchen.actions = {}
-    kitchen.activeTimer = nil
+    kitchen.cards = {}
+    bakingColumn:refresh()
+    kitchen:startBatch(1)
     morgan.value = 0
     alex.value = 0
     cupcakes.value = 0
