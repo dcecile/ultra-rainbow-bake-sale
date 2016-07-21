@@ -1,4 +1,8 @@
-By Dan Cecile
+By Dan Cecile, with LÖVE
+http://love2d.org
 
-"Royalty Free Music from Bensound"
+Royalty Free Music from Bensound
 http://www.bensound.com/royalty-free-music/track/a-new-beginning
+
+Roboto Condensed Font from Google
+https://www.google.com/fonts/specimen/Roboto+Condensed

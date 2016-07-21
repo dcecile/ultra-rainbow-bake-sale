@@ -33,7 +33,7 @@ screen = ui.screen:extend({
   backgroundColor = colors.darkBackground,
   buttons = ui.column:extend({
     left = 50,
-    top = 200,
+    top = 320,
     margin = 30,
     cards = { newGame, exit }
   }),
