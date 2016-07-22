@@ -1,4 +1,3 @@
-Python scripts
 Resolution scaling
 Version number
 Settings screen
