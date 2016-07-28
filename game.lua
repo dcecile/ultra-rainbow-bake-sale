@@ -1,4 +1,5 @@
 local colors = require('colors')
+local settingsScreen = require('settingsScreen')
 local cupcakeScreen = require('cupcakeScreen')
 local doneScreen = require('doneScreen')
 local particleEngine = require('particleEngine')
@@ -1050,11 +1051,7 @@ local infoBox = ui.rectangle:extend({
   highlightColor = colors.highlightColor,
   margin = styledBoxCard.margin,
   width = styledBoxCard.width,
-  height = 320,
-  refresh = function (self)
-    self.left = hope.left
-    self.top = kitchenMinutes.top + kitchenMinutes.height - self.height
-  end,
+  height = 315,
   paint = function (self)
     if ui.targeting:isSet() and ui.targeting:isSource(self) then
       rectangleEngine.paintPadded(
@@ -1084,6 +1081,21 @@ local infoBox = ui.rectangle:extend({
   set = function (self, card)
     self.title = card.text
     self.body = card.description
+  end,
+})
+
+local settingsButton = ui.card:extend({
+  color = infoBox.color,
+  borderColor = infoBox.borderColor,
+  textColor = infoBox.textColor,
+  width = infoBox.width,
+  height = styledBoxCard.height,
+  margin = { 13, 12 },
+  font = 'big',
+  text = 'Settings',
+  description = 'Configure the program.',
+  clicked = function (self)
+    settingsScreen.screen:show(screen)
   end,
 })
 
@@ -1132,13 +1144,17 @@ local libraryColumn = styledColumn:extend({
     libraryCard:make(intenseCuriosity),
     libraryCard:make(itGetsBetter),
     libraryCard:make(knowledgeIsPower),
+    styledSpacerSymmetrical:extend(),
+    infoBox,
+    styledSpacerSymmetrical:extend(),
+    settingsButton,
   }
 })
 
 screen = ui.screen:extend({
   backgroundColor = colors.lightBackground,
   next = doneScreen.screen,
-  shapes = { bakingColumn, mainColumn, libraryColumn, infoBox },
+  shapes = { bakingColumn, mainColumn, libraryColumn },
   update = function (self, time)
     particleEngine.update(time)
     self:refresh()

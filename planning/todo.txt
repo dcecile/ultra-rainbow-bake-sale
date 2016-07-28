@@ -1,8 +1,8 @@
 Resolution scaling
-Version number
-Settings screen
 Mute music button
 Fullscreen button
+Cleanup count not cost
+Completely decoupled batches
 Persistent settings
 Slack time indicator
 Following tasks indicator

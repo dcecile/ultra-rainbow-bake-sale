@@ -19,20 +19,19 @@ local newGame = creditsCard:extend({
   text = 'New game',
   clicked = function (self)
     screen:showNext()
-  end
+  end,
 })
 
 local exit = creditsCard:extend({
   text = 'Exit',
   clicked = function (self)
     love.event.quit()
-  end
+  end,
 })
 
 screen = ui.screen:extend({
   backgroundColor = colors.darkBackground,
   buttons = ui.column:extend({
-    left = 50,
     top = 320,
     margin = 30,
     cards = { newGame, exit }
@@ -41,26 +40,31 @@ screen = ui.screen:extend({
     self.credits = love.filesystem.read('credits.txt')
     ui.screen.show(self)
   end,
-  paint = function (self)
+  update = function (self, time)
+    self:refresh()
+  end,
+  refresh = function (self)
     local mouseX, mouseY = love.mouse.getPosition()
     ui.cursor:clear()
     local width, height = love.graphics.getDimensions()
     self.buttons.left = width / 2 - creditsCard.width / 2
     self.buttons:refresh()
-    self.buttons:checkHover(mouseX, mouseY, function ()
-      ui.cursor:clickable()
+    self.buttons:checkHover(mouseX, mouseY, function (card)
+      if card:isClickable() then
+        ui.cursor:clickable()
+      end
     end)
-
+  end,
+  paint = function (self)
     textEngine.paint(colors.inverseText, 'big', self.credits, 20, 20)
     self.buttons:paint()
   end,
   mousepressed = function (self, x, y, button, istouch)
-    self.buttons:refresh()
+    self:refresh()
     self.buttons:mousepressed(x, y, button, istouch)
   end,
 })
 
 return {
   screen = screen,
-  requireBackwards = requireBackwards,
 }

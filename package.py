@@ -6,6 +6,7 @@ import functools
 import glob
 import itertools
 import shutil
+import versionNumber
 
 def globAll(patterns):
   return itertools.chain.from_iterable(
@@ -28,10 +29,16 @@ def writeLocalFiles(zipFile, *patterns):
   for sourceName in globAll(patterns):
     zipFile.write(sourceName)
 
-def writeLoveFile(basename):
+def buildVersionFile(version):
+  return 'return {{ number = \'{0}\' }}'.format(version)
+
+def writeLoveFile(basename, version):
   filename = '{0}.love'.format(basename)
   with openCompressedZip(filename) as gameLoveFile:
     writeLocalFiles(gameLoveFile, '*.lua', '*.txt', '*.mp3', '*.ttf')
+    gameLoveFile.writestr(
+      'packagedVersionNumber.lua',
+      buildVersionFile(version))
   print('Done {0}'.format(filename))
 
 def buildExe(sourceFilename, sourceZipFile):
@@ -64,6 +71,8 @@ def writeLoveWin64ZipFile(basename):
       writeZippedFiles(gameZipFile, loveZipFile, '*.dll')
   print('Done {0}'.format(filename))
 
-writeLoveFile('ultra_rainbow_bake_sale')
+version = versionNumber.getVersionNumber()
+writeLoveFile('ultra_rainbow_bake_sale', version)
 writeLoveMultiZipFile('ultra_rainbow_bake_sale')
 writeLoveWin64ZipFile('ultra_rainbow_bake_sale')
+print('Built {0}'.format(version))

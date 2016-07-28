@@ -1,8 +1,11 @@
 local creditsScreen = require('creditsScreen')
 local currentScreen = require('currentScreen')
+local debugMode = require('debugMode')
 local game = require('game')
 local proto = require('proto')
+local settingsScreen = require('settingsScreen')
 local titleScreen = require('titleScreen')
+local ui = require('ui')
 
 local quitShortcut = false
 
@@ -20,16 +23,15 @@ function love.load()
   titleScreen.screen:show()
   creditsScreen.screen.next = titleScreen.screen
 
-  if tonumber(os.getenv('DEBUG_URBS')) == 1 then
+  if debugMode.isActive then
     titleScreen.screen.mute = true
-    quitShortcut = true
     game.screen:show()
     game.screen:start()
   end
 end
 
 function love.keypressed(key, isrepeat)
-  if quitShortcut then
+  if debugMode.isActive then
     if key == ' ' or key == 'return' then
       love.event.quit()
     end
