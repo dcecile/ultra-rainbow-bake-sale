@@ -1,15 +1,20 @@
-local function paint(color, left, top, width, height)
-  love.graphics.setColor(color)
-  love.graphics.rectangle('fill', left, top, width, height)
-end
+local resolutionEngine = require('resolutionEngine')
+
+local scaleF = resolutionEngine.scaleFloat
+local scaleR = resolutionEngine.scaleRoundToZero
 
 local function paintPadded(color, left, top, width, height, padding)
-  paint(
-    color,
-    left - padding,
-    top - padding,
-    width + padding * 2,
-    height + padding * 2)
+  love.graphics.setColor(color)
+  love.graphics.rectangle(
+    'fill',
+    scaleR(left) - padding,
+    scaleR(top) - padding,
+    scaleR(left + width) - scaleR(left) + padding * 2,
+    scaleR(top + height) - scaleR(top) + padding * 2)
+end
+
+local function paint(color, left, top, width, height)
+  paintPadded(color, left, top, width, height, 0)
 end
 
 return {

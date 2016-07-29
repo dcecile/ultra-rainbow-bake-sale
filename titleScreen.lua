@@ -1,6 +1,7 @@
 local audioEngine = require('audioEngine')
 local colors = require('colors')
 local introScreen = require('introScreen')
+local resolutionEngine = require('resolutionEngine')
 local textEngine = require('textEngine')
 local ui = require('ui')
 
@@ -9,7 +10,7 @@ local screen = ui.screen:extend({
   next = introScreen.screen,
   paint = function (self)
     ui.cursor:clickable()
-    local width, height = love.graphics.getDimensions()
+    local width, height = resolutionEngine.getUnscaledDimensions()
     local titleText = textEngine.getTextObject(
       'title',
       'Ultra Rainbow Bake Sale')

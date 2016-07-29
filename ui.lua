@@ -1,10 +1,12 @@
 local currentScreen = require('currentScreen')
 local proto = require('proto')
 local rectangleEngine = require('rectangleEngine')
+local resolutionEngine = require('resolutionEngine')
 local textEngine = require('textEngine')
 local vectors = require('vectors')
 
 local vec2 = vectors.vec2
+local unscaleF = resolutionEngine.unscaleFloat
 
 local cursor = proto.object:extend({
   isTargeting = false,
@@ -135,7 +137,7 @@ local spacer = rectangle:extend({
       self.left + self.margin[1],
       self.top + self.margin[2],
       self.width - self.margin[1] * 2,
-      1)
+      unscaleF(1))
   end,
 })
 

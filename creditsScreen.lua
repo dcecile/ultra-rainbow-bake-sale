@@ -1,5 +1,6 @@
 local colors = require('colors')
 local rectangleEngine = require('rectangleEngine')
+local resolutionEngine = require('resolutionEngine')
 local textEngine = require('textEngine')
 local ui = require('ui')
 
@@ -44,9 +45,9 @@ screen = ui.screen:extend({
     self:refresh()
   end,
   refresh = function (self)
-    local mouseX, mouseY = love.mouse.getPosition()
+    local mouseX, mouseY = resolutionEngine.getUnscaledMousePosition()
     ui.cursor:clear()
-    local width, height = love.graphics.getDimensions()
+    local width, height = resolutionEngine.getUnscaledDimensions()
     self.buttons.left = width / 2 - creditsCard.width / 2
     self.buttons:refresh()
     self.buttons:checkHover(mouseX, mouseY, function (card)

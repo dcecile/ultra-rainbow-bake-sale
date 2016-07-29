@@ -1,5 +1,6 @@
 local colors = require('colors')
 local rectangleEngine = require('rectangleEngine')
+local resolutionEngine = require('resolutionEngine')
 local textEngine = require('textEngine')
 local ui = require('ui')
 
@@ -25,9 +26,9 @@ end
 local screen = ui.screen:extend({
   paint = function (self)
     ui.cursor:clickable()
-    local width, height = love.graphics.getDimensions()
-    rectangleEngine.paintPadded(
-      colors.textBox, 0, 0, width, height, -100)
+    local width, height = resolutionEngine.getUnscaledDimensions()
+    rectangleEngine.paint(
+      colors.textBox, 100, 100, width - 200, height - 200)
     paintLines(colors.inverseText, self.lines)
   end,
 })

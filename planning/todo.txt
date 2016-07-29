@@ -1,6 +1,6 @@
-Resolution scaling
 Mute music button
 Fullscreen button
+Animation continued into new game
 Cleanup count not cost
 Completely decoupled batches
 Persistent settings
@@ -20,3 +20,5 @@ Remove-card animation
 Hope animation
 Baking animation
 Card slot animation
+Resolution scaling steps
+Resolution scaling padding

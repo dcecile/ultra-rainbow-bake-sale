@@ -1,8 +1,14 @@
 local colors = require('colors')
 local rectangleEngine = require('rectangleEngine')
+local resolutionEngine = require('resolutionEngine')
 local ui = require('ui')
 
-local function paintCupcake()
+local scaleF = resolutionEngine.scaleFloat
+
+local function paintCupcake(x, y)
+  love.graphics.push()
+  love.graphics.translate(x, y)
+
   love.graphics.setColor({ 252, 255, 174 })
   love.graphics.polygon('fill',
     430, 235, 420, 202,
@@ -57,10 +63,12 @@ local function paintCupcake()
   love.graphics.polygon('fill',
     497, 202, 502, 202,
     493, 230)
+
+  love.graphics.pop()
 end
 
 local function paintStar(color, x, y, angle)
-  love.graphics.origin()
+  love.graphics.push()
   love.graphics.setColor(color)
   love.graphics.translate(x, y)
   love.graphics.rotate(angle)
@@ -77,6 +85,8 @@ local function paintStar(color, x, y, angle)
       -body, -body)
     love.graphics.rotate(math.pi / 2)
   end
+
+  love.graphics.pop()
 end
 
 local screen = ui.screen:extend({
@@ -84,9 +94,9 @@ local screen = ui.screen:extend({
   paint = function (self)
     ui.cursor:clickable()
 
-    local screenWidth, screenHeight = love.graphics.getDimensions()
-    rectangleEngine.paintPadded(
-      colors.textBox, 0, 0, screenWidth, screenHeight, -100)
+    local screenWidth, screenHeight = resolutionEngine.getUnscaledDimensions()
+    rectangleEngine.paint(
+      colors.textBox, 100, 100, screenWidth - 200, screenHeight - 200)
 
     local cupcakeWidth = 515 - 415
     local cupcakeHeight = 235 - 165
@@ -95,17 +105,17 @@ local screen = ui.screen:extend({
     local cupcakeX = -415 + screenWidth / 2 - (cupcakeWidth * 4 + marginX * 3) / 2
     local cupcakeY = -165 + screenHeight / 2 - (cupcakeHeight * 3 + marginY * 2) / 2
 
+    love.graphics.origin()
+    love.graphics.scale(scaleF(1), scaleF(1))
+
     for y = 0, 2 do
       for x = 0, 3 do
-        love.graphics.origin()
-        love.graphics.translate(
+        paintCupcake(
           cupcakeX + x * (cupcakeWidth + marginX),
           cupcakeY + y * (cupcakeHeight + marginY))
-        paintCupcake()
       end
     end
 
-    love.graphics.origin()
     paintStar(
       { 255, 190, 137 },
       415 + cupcakeX + 30,

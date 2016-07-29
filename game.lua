@@ -4,9 +4,12 @@ local cupcakeScreen = require('cupcakeScreen')
 local doneScreen = require('doneScreen')
 local particleEngine = require('particleEngine')
 local rectangleEngine = require('rectangleEngine')
+local resolutionEngine = require('resolutionEngine')
 local textEngine = require('textEngine')
 local ui = require('ui')
 local utils = require('utils')
+
+local unscaleF = resolutionEngine.unscaleFloat
 
 local styledColumn = ui.column:extend({
   margin = 10
@@ -64,7 +67,7 @@ local boxCard = ui.card:extend({
     rectangleEngine.paint(
       boxColors.background, boxLeft, self.top, boxWidth, self.height)
     rectangleEngine.paint(
-      boxColors.foreground, boxLeft - 1, self.top, 1, self.height)
+      boxColors.foreground, boxLeft - unscaleF(1), self.top, unscaleF(1), self.height)
     local boxText = textEngine.getTextObject(self.font, tostring(boxValue))
     textEngine.paintTextObject(
       boxColors.foreground,
@@ -1160,7 +1163,7 @@ screen = ui.screen:extend({
     self:refresh()
   end,
   refresh = function (self)
-    local mouseX, mouseY = love.mouse.getPosition()
+    local mouseX, mouseY = resolutionEngine.getUnscaledMousePosition()
     ui.cursor:clear()
     infoBox:reset()
     for i, shape in ipairs(self.shapes) do
@@ -1219,7 +1222,7 @@ screen = ui.screen:extend({
     local seed = love.timer.getTime()
     print('seed', seed)
     math.randomseed(seed)
-    self:refresh()
+    mainColumn:refresh()
     drawPile:shuffle()
     startTurn()
   end,
