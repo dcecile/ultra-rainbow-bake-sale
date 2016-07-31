@@ -1,140 +1,22 @@
 local colors = require('colors')
-local gameUi = require('gameUi')
-local settingsScreen = require('settingsScreen')
 local cupcakeScreen = require('cupcakeScreen')
 local doneScreen = require('doneScreen')
+local gameDeckBasics = require('gameDeckBasics')
+local gameDeckCards = require('gameDeckCards')
+local gameUi = require('gameUi')
 local particleEngine = require('particleEngine')
 local rectangleEngine = require('rectangleEngine')
 local resolutionEngine = require('resolutionEngine')
+local settingsScreen = require('settingsScreen')
 local textEngine = require('textEngine')
 local ui = require('ui')
 local utils = require('utils')
 
-local unscaleF = resolutionEngine.unscaleFloat
-
-local discardPile = gameUi.styledPile:extend({
-  text = 'Discard pile',
-  description =
-    'Used and acquired cards\n'
-    .. 'go here.',
-})
-
-local drawPile = gameUi.styledPile:extend({
-  text = 'Draw pile',
-  description =
-    'These are the cards that\n'
-    .. 'will be drawn next. When\n'
-    .. 'empty, the discard pile is\n'
-    .. 'taken and shuffled.',
-  shuffle = function (self)
-    local newCards = {}
-    while #self.cards > 0 do
-      local nextIndex = math.random(#self.cards)
-      local nextCard = table.remove(self.cards, nextIndex)
-      table.insert(newCards, nextCard)
-    end
-    self.cards = newCards
-  end,
-  drawMany = function (self, drawCards)
-    for i = 1, drawCards do
-      if #self.cards > 0 then
-        self.cards[1]:moveToHand()
-      elseif #discardPile.cards > 0 then
-        while #discardPile.cards > 0 do
-          discardPile.cards[1]:moveToDraw()
-        end
-        self:shuffle()
-        self.cards[1]:moveToHand()
-      end
-    end
-  end,
-  cards = {},
-})
-
-local deckCardColumn = gameUi.styledColumn:extend({
-  cards = {},
-  minHeight = gameUi.styledBoxCard.height * 5 + gameUi.styledColumn.margin * 4,
-  maxCards = 5,
-  tryDiscard = function (self, number, source, block)
-    if number <= 0 then
-      block()
-    else
-      ui.targeting:set({
-        source = source,
-        isTargetable = function (card)
-          return card.column == self and card ~= source
-        end,
-        target = function (card)
-          ui.targeting:toggleSelected(card)
-          if #ui.targeting.selected == number then
-            for i, selectedCard in ipairs(ui.targeting.selected) do
-              selectedCard:moveToDiscard()
-            end
-            ui.targeting:reset()
-            block()
-          else
-            ui.targeting.continue = true
-          end
-        end,
-      })
-    end
-  end,
-  tryDiscardToMax = function (self, modifier, source, block)
-    self:tryDiscard(#self.cards + modifier - self.maxCards, source, block)
-  end,
-})
-
-local handHeading = gameUi.styledHeading:extend({
-  text = 'Hand',
-  description =
-    'Current thoughts, feelings,\n'
-    .. 'and ideas ready for action.\n'
-    .. 'Click a card to pay hope\n'
-    .. 'and use.',
-})
-
-local hand = deckCardColumn:extend()
-
-local mindsetHeading = gameUi.styledHeading:extend({
-  text = 'Mindset',
-  description =
-    'Persistent philosophies\n'
-    .. 'and paradigms. Click a\n'
-    .. 'card to pay hope and use.\n'
-    .. 'New mindsets need one\n'
-    .. 'turn to get established.',
-})
-
-local mindset = deckCardColumn:extend()
-
-local hope = gameUi.styledBoxCard:extend({
-  text = 'Hope',
-  description =
-    'Build up and find hope.\n'
-    .. 'Use it to do good things,\n'
-    .. 'or just things.',
-  value = 0,
-  add = function (self, value)
-    self.value = self.value + value
-  end,
-  pay = function (self, cost)
-    self.value = self.value - cost
-  end,
-  tryPay = function (self, cost, block)
-    if self.value >= cost then
-      self.value = self.value - cost
-      block()
-    end
-  end,
-  borderColor = colors.hope.foreground,
-  textColor = colors.hope.foreground,
-  getBoxColors = function (self)
-    return colors.hope
-  end,
-  getBoxValue = function (self)
-    return self.value
-  end,
-})
+local discardPile = gameDeckBasics.discardPile
+local drawPile = gameDeckBasics.drawPile
+local hand = gameDeckBasics.hand
+local hope = gameDeckBasics.hope
+local mindset = gameDeckBasics.mindset
 
 local kitchen
 local morgan
@@ -573,319 +455,6 @@ alex = playerCard:extend({
     .. 'Best friend of Morgan.',
 })
 
-local libraryHeading = gameUi.styledHeading:extend({
-  text = 'Library',
-  description =
-    'New techniques to learn\n'
-    .. 'and try out. Click a card\n'
-    .. 'to pay hope and aquire.',
-})
-
-local libraryCard = gameUi.styledBoxCard:extend({
-  take = function (self, count)
-    local previousParticle = nil
-    for i = 1, count do
-      local newCard = self.card:extend()
-      discardPile:insert(newCard)
-      local currentParticle = gameUi.styledCardParticle:extend({
-        origin = self:getLeftCenter(gameUi.styledCardParticle.size / 2),
-        target = discardPile:getRightCenter(gameUi.styledCardParticle.size / 2),
-        duration = self.animationDuration,
-        path = particleEngine.essPath(gameUi.pathRadius),
-      })
-      if not previousParticle then
-        particleEngine.add(currentParticle)
-      else
-        previousParticle.next = function ()
-          particleEngine.add(currentParticle)
-        end
-      end
-      previousParticle = currentParticle
-    end
-  end,
-  clicked = function (self)
-    hope:tryPay(self.card.buyCost, function ()
-      self:take(1)
-    end)
-  end,
-  make = function (self, card)
-    return self:extend({
-      card = card,
-      text = card.text,
-      description = card.description,
-    })
-  end,
-  refresh = function (self)
-    if self:isClickable() then
-      self.boxColors = colors.hope
-      self.textColor = colors.hope.foreground
-    else
-      self.boxColors = colors.hopeDisabled
-      self.textColor = colors.disabledText
-    end
-  end,
-  isClickable = function (self)
-    return hope.value >= self.card.buyCost
-  end,
-  getBoxColors = function (self)
-    return self.boxColors
-  end,
-  getBoxValue = function (self)
-    return self.card.buyCost
-  end,
-})
-
-local deckCard = gameUi.styledBoxCard:extend({
-  column = discardPile,
-  clicked = function (self)
-    local cost = self.cost
-    if self:isClickable() then
-      self:action(function ()
-        hope:pay(cost)
-      end)
-    end
-  end,
-  isClickable = function (self)
-    return self.action
-      and not self.delay
-      and hope.value >= self.cost
-  end,
-  moveToDraw = function (self)
-    self.column:remove(self)
-    drawPile:insert(self)
-    self.column = drawPile
-    self.action = nil
-    self.cost = nil
-    self.delay = false
-  end,
-  moveToHand = function (self)
-    self.column:remove(self)
-    hand:insert(self)
-    particleEngine.add(gameUi.styledCardParticle:extend({
-      origin = drawPile:getLeftCenter(gameUi.styledCardParticle.size / 2),
-      target = self:getLeftCenter(gameUi.styledCardParticle.size / 2),
-      path = particleEngine.seePath(gameUi.pathRadius, -1),
-    }))
-    self.column = hand
-    self.action = self.play
-    self.cost = self.playCost
-    self.delay = false
-  end,
-  tryMoveToMindset = function (self, block)
-    mindset:tryDiscardToMax(1, self, function ()
-      local origin = self:getLeftCenter(gameUi.styledCardParticle.size / 2)
-      self.column:remove(self)
-      mindset:insert(self)
-      local target = self:getLeftCenter(gameUi.styledCardParticle.size / 2)
-      particleEngine.add(gameUi.styledCardParticle:extend({
-        origin = origin,
-        target = target,
-        path = particleEngine.seePath(gameUi.pathRadius, -1),
-      }))
-      self.column = mindset
-      self.action = self.activate
-      self.cost = self.activateCost
-      self.delay = true
-      block()
-    end)
-  end,
-  moveToDiscard = function (self)
-    particleEngine.add(gameUi.styledCardParticle:extend({
-      origin = self:getRightCenter(gameUi.styledCardParticle.size / 2),
-      target = discardPile:getRightCenter(gameUi.styledCardParticle.size / 2),
-      path = particleEngine.seePath(gameUi.pathRadius, 1),
-    }))
-    self.column:remove(self)
-    discardPile:insert(self)
-    self.column = discardPile
-    self.action = nil
-    self.cost = nil
-    self.delay = false
-  end,
-  remove = function (self)
-    self.column:remove(self)
-  end,
-  refresh = function (self)
-    if self.cost and hope.value >= self.cost and not self.delay then
-      self.boxColors = colors.hope
-      self.textColor = colors.text
-    else
-      self.boxColors = colors.hopeDisabled
-      self.textColor = colors.disabledText
-    end
-  end,
-  getBoxColors = function (self)
-    return self.boxColors
-  end,
-  getBoxValue = function (self)
-    return self.cost
-  end,
-})
-
-local hopeFeeling = deckCard:extend({
-  playCost = 0,
-  play = function (self, pay)
-    hope:add(self.buyCost)
-    self:moveToDiscard()
-    pay()
-  end,
-})
-
-local glimmerOfHope = hopeFeeling:extend({
-  text = 'Glimmer of hope',
-  description =
-    'Fundamental source of\n'
-    .. 'hope. Play and discard\n'
-    .. 'to gain 1 hope.',
-  buyCost = 1,
-})
-
-local feelingOfHope = hopeFeeling:extend({
-  text = 'Feeling of hope',
-  description =
-    'Fundamental source of\n'
-    .. 'hope. Play and discard\n'
-    .. 'to gain 2 hope.',
-  buyCost = 2,
-})
-
-local visionOfHope = hopeFeeling:extend({
-  text = 'Vision of hope',
-  description =
-    'Fundamental source of\n'
-    .. 'hope. Play and discard\n'
-    .. 'to gain 4 hope.',
-  buyCost = 4,
-})
-
-local itGetsBetter = deckCard:extend({
-  text = 'It gets better',
-  description =
-    'Continual source of hope.\n'
-    .. 'Play this mindset, then\n'
-    .. 'activate to gain 2 hope.',
-  buyCost = 2,
-  playCost = 2,
-  activateCost = 0,
-  play = function (self, pay)
-    self:tryMoveToMindset(function ()
-      pay()
-    end)
-  end,
-  activate = function (self, pay)
-    hope:add(2)
-    self.delay = true
-    pay()
-  end,
-})
-
-local knowledgeIsPower = deckCard:extend({
-  text = 'Knowledge is power',
-  description =
-    'Continual source of\n'
-    .. 'inspiration. Play this\n'
-    .. 'mindset, then activate to\n'
-    .. 'draw 2 cards.',
-  buyCost = 2,
-  playCost = 2,
-  activateCost = 0,
-  play = function (self, pay)
-    self:tryMoveToMindset(function ()
-      pay()
-    end)
-  end,
-  activate = function (self, pay)
-    hand:tryDiscardToMax(2, self, function ()
-      drawPile:drawMany(2)
-      self.delay = true
-      pay()
-    end)
-  end,
-})
-
-local ennui = deckCard:extend({
-  text = 'Ennui',
-  description =
-    'Boredom. Enervation.\n'
-    .. 'Un-motivation. Fatigue.\n'
-    .. 'Cannot be played.',
-  playCost = math.huge,
-  buyCost = math.huge,
-  getBoxValue = function (self)
-    return '∞'
-  end,
-})
-
-local ennuiLibraryCard = libraryCard:make(ennui)
-ennuiLibraryCard.getBoxValue = ennui.getBoxValue
-ennuiLibraryCard.animationDuration = gameUi.styledCardParticle.duration * 2
-
-local curiosity = deckCard:extend({
-  play = function (self, pay)
-    local cardsToDraw = math.min(
-      self.playCost + 1,
-      #drawPile.cards + #discardPile.cards)
-    hand:tryDiscardToMax(cardsToDraw - 1, self, function ()
-      self:moveToDiscard()
-      drawPile:drawMany(cardsToDraw)
-      pay()
-    end)
-  end,
-})
-
-local mildCuriosity = curiosity:extend({
-  text = 'Mild curiosity',
-  description =
-    'Don’t be afraid of the\n'
-    .. 'unknown. Play and discard\n'
-    .. 'to draw 2 cards.',
-  buyCost = 1,
-  playCost = 1,
-})
-
-local intenseCuriosity = curiosity:extend({
-  text = 'Intense curiosity',
-  description =
-    'Don’t be afraid of the\n'
-    .. 'unknown. Play and discard\n'
-    .. 'to draw 4 cards.',
-  buyCost = 3,
-  playCost = 3,
-})
-
-local letItGo = deckCard:extend({
-  text = 'Let it go',
-  description =
-    'Be present. Let go. Play\n'
-    .. 'this mindset, then activate\n'
-    .. 'and discard. Return one\n'
-    .. 'card to the library, and\n'
-    .. 'draw a new card.',
-  buyCost = 1,
-  playCost = 1,
-  activateCost = 0,
-  play = function (self, pay)
-    self:tryMoveToMindset(function ()
-      pay()
-    end)
-  end,
-  activate = function (self, pay)
-    ui.targeting:set({
-      source = self,
-      isTargetable = function (card)
-        return card.column == hand
-      end,
-      target = function (card)
-        card:remove()
-        drawPile:drawMany(1)
-        self:moveToDiscard()
-        ui.targeting:reset()
-        pay()
-      end,
-    })
-  end,
-})
-
 local function startTurn()
   hope.value = 0
   while #hand.cards > 0 do
@@ -917,9 +486,9 @@ local endTurn = gameUi.styledBoxCard:extend({
           kitchen:getCleanupCost()))
     else
       if self.turnCounter >= 9 then
-        ennuiLibraryCard:take(1)
+        gameDeckCards.ennuiLibraryCard:take(1)
       else
-        ennuiLibraryCard:take(2)
+        gameDeckCards.ennuiLibraryCard:take(2)
       end
       self.turnCounter = self.turnCounter - 1
       startTurn()
@@ -1032,10 +601,10 @@ local mainColumn = gameUi.styledColumn:extend({
     discardPile,
     drawPile,
     gameUi.styledSpacer:extend(),
-    handHeading,
+    gameDeckBasics.handHeading,
     hand,
     gameUi.styledSpacer:extend(),
-    mindsetHeading,
+    gameDeckBasics.mindsetHeading,
     mindset,
     gameUi.styledSpacerSymmetrical:extend(),
     endTurn,
@@ -1049,14 +618,8 @@ local libraryColumn = gameUi.styledColumn:extend({
   cards = {
     hope,
     gameUi.styledSpacer:extend(),
-    libraryHeading,
-    ennuiLibraryCard,
-    libraryCard:make(feelingOfHope),
-    libraryCard:make(visionOfHope),
-    libraryCard:make(mildCuriosity),
-    libraryCard:make(intenseCuriosity),
-    libraryCard:make(itGetsBetter),
-    libraryCard:make(knowledgeIsPower),
+    gameDeckBasics.libraryHeading,
+    gameDeckCards.libraryColumn,
     gameUi.styledSpacerSymmetrical:extend(),
     infoBox,
     gameUi.styledSpacerSymmetrical:extend(),
@@ -1108,16 +671,16 @@ screen = ui.screen:extend({
   start = function (self)
     particleEngine.reset()
     discardPile.cards = {
-      glimmerOfHope:extend(),
-      glimmerOfHope:extend(),
-      glimmerOfHope:extend(),
-      glimmerOfHope:extend(),
-      glimmerOfHope:extend(),
-      letItGo:extend(),
-      letItGo:extend(),
-      letItGo:extend(),
-      letItGo:extend(),
-      letItGo:extend(),
+      gameDeckCards.glimmerOfHope:extend(),
+      gameDeckCards.glimmerOfHope:extend(),
+      gameDeckCards.glimmerOfHope:extend(),
+      gameDeckCards.glimmerOfHope:extend(),
+      gameDeckCards.glimmerOfHope:extend(),
+      gameDeckCards.letItGo:extend(),
+      gameDeckCards.letItGo:extend(),
+      gameDeckCards.letItGo:extend(),
+      gameDeckCards.letItGo:extend(),
+      gameDeckCards.letItGo:extend(),
     }
     drawPile.cards = {}
     hand.cards = {}
