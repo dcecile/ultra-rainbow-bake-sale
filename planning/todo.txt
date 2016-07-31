@@ -1,5 +1,3 @@
-Mute music button
-Fullscreen button
 Cleanup count not cost
 Completely decoupled batches
 Persistent settings

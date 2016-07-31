@@ -17,6 +17,23 @@ local settingsCard = ui.card:extend({
   font = 'big',
 })
 
+local settingsBoxCard = ui.boxCard:extend({
+  color = settingsCard.color,
+  borderColor = settingsCard.borderColor,
+  textColor = settingsCard.textColor,
+  width = settingsCard.width,
+  height = settingsCard.height,
+  margin = settingsCard.margin,
+  font = settingsCard.font,
+  getBoxColors = function (self)
+    return colors.cupcakes
+    --return {
+      --foreground = settingsCard.textColor,
+      --background = settingsCard.color,
+    --}
+  end,
+})
+
 local settingsSpacer = ui.spacer:extend({
   width = settingsCard.width,
   margin = { 12, 6, 1 },
@@ -25,7 +42,7 @@ local settingsSpacer = ui.spacer:extend({
 
 local screen
 
-local backgroundMusic = settingsCard:extend({
+local backgroundMusic = settingsBoxCard:extend({
   text = 'Background music',
   refresh = function (self)
     self.isOn = audioEngine.getMusicIsOn()
@@ -33,15 +50,29 @@ local backgroundMusic = settingsCard:extend({
   clicked = function (self)
     audioEngine.setMusicIsOn(not self.isOn)
   end,
+  getBoxValue = function (self)
+    if self.isOn then
+      return 'On'
+    else
+      return 'Off'
+    end
+  end,
 })
 
-local fullscreen = settingsCard:extend({
+local fullscreen = settingsBoxCard:extend({
   text = 'Fullscreen',
   refresh = function (self)
     self.isFullscreen = love.window.getFullscreen()
   end,
   clicked = function (self)
     love.window.setFullscreen(not self.isFullscreen)
+  end,
+  getBoxValue = function (self)
+    if self.isFullscreen then
+      return 'On'
+    else
+      return 'Off'
+    end
   end,
 })
 

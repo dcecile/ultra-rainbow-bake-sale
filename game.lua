@@ -25,59 +25,7 @@ local styledCardParticle = particleEngine.cardParticle:extend({
 
 local pathRadius = columnSpacing / 2
 
-local boxCard = ui.card:extend({
-  paint = function (self)
-    local borderColor = self.borderColor
-    local color = self.color
-    local highlight = false
-
-    if ui.targeting:isSet() then
-      if ui.targeting:isSource(self) then
-        highlight = true
-        color = self.untargetableColor
-      elseif ui.targeting:isSelected(self) then
-        highlight = true
-        borderColor = self.selectedBorderColor
-      elseif not ui.targeting:isTargetable(self) then
-        color = self.untargetableColor
-      end
-    end
-
-    if highlight then
-      rectangleEngine.paintPadded(
-        self.highlightColor, self.left, self.top, self.width, self.height, 3)
-    end
-
-    rectangleEngine.paintPadded(
-      borderColor, self.left, self.top, self.width, self.height, 1)
-    rectangleEngine.paint(
-      color, self.left, self.top, self.width, self.height)
-
-    textEngine.paint(
-      self.textColor,
-      self.font,
-      self.text,
-      self.left + self.margin[1],
-      self.top + self.margin[2])
-
-    local boxColors = self:getBoxColors()
-    local boxValue = self:getBoxValue()
-    local boxWidth = 50
-    local boxLeft = self.left + self.width - boxWidth
-    rectangleEngine.paint(
-      boxColors.background, boxLeft, self.top, boxWidth, self.height)
-    rectangleEngine.paint(
-      boxColors.foreground, boxLeft - unscaleF(1), self.top, unscaleF(1), self.height)
-    local boxText = textEngine.getTextObject(self.font, tostring(boxValue))
-    textEngine.paintTextObject(
-      boxColors.foreground,
-      boxText,
-      math.floor(boxLeft + boxWidth / 2 - boxText:getWidth() / 2),
-      self.top + self.margin[2])
-  end,
-})
-
-local styledBoxCard = boxCard:extend({
+local styledBoxCard = ui.boxCard:extend({
   color = colors.card,
   borderColor = colors.text,
   textColor = colors.text,

@@ -5,6 +5,8 @@ local resolutionEngine = require('resolutionEngine')
 local textEngine = require('textEngine')
 local ui = require('ui')
 
+local unscaleF = resolutionEngine.unscaleFloat
+
 local screen = ui.screen:extend({
   backgroundColor = colors.darkBackground,
   next = introScreen.screen,
@@ -17,8 +19,8 @@ local screen = ui.screen:extend({
     textEngine.paintTextObject(
         colors.inverseText,
         titleText,
-        math.floor(width / 2 - titleText:getWidth() / 2),
-        math.floor(height / 2 - titleText:getHeight() / 2))
+        math.floor(width / 2 - unscaleF(titleText:getWidth()) / 2),
+        math.floor(height / 2 - unscaleF(titleText:getHeight()) / 2))
   end,
   mousepressed = function (self, x, y, button, istouch)
     audioEngine.startMusic()

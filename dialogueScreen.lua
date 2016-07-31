@@ -4,6 +4,8 @@ local resolutionEngine = require('resolutionEngine')
 local textEngine = require('textEngine')
 local ui = require('ui')
 
+local unscaleF = resolutionEngine.unscaleFloat
+
 local function paintLines(color, lines)
     local separator = textEngine.getTextObject('big', '/')
     local margin = 22
@@ -14,9 +16,9 @@ local function paintLines(color, lines)
     for i, line in ipairs(lines) do
       local lineTop = top + (i - 1) * lineHeight
       local name = textEngine.getTextObject('big', line[1])
-      local nameLeft = separatorLeft - margin - name:getWidth()
+      local nameLeft = separatorLeft - margin - unscaleF(name:getWidth())
       local text = textEngine.getTextObject('big', line[2])
-      local textLeft = separatorLeft + separator:getWidth() + margin
+      local textLeft = separatorLeft + unscaleF(separator:getWidth()) + margin
       textEngine.paintTextObject(color, name, nameLeft, lineTop)
       textEngine.paintTextObject(color, separator, separatorLeft, lineTop)
       textEngine.paintTextObject(color, text, textLeft, lineTop)

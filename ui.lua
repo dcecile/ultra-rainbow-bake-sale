@@ -147,8 +147,8 @@ local heading = rectangle:extend({
     textEngine.paintTextObject(
       self.color,
       text,
-      math.floor(self.left + self.width / 2 - text:getWidth() / 2),
-      math.floor(self.top + self.height / 2 - text:getHeight() / 2))
+      math.floor(self.left + self.width / 2 - unscaleF(text:getWidth()) / 2),
+      math.floor(self.top + self.height / 2 - unscaleF(text:getHeight()) / 2))
   end,
 })
 
@@ -165,6 +165,58 @@ local card = rectangle:extend({
       self.left + self.margin[1],
       self.top + self.margin[2])
   end
+})
+
+local boxCard = card:extend({
+  paint = function (self)
+    local borderColor = self.borderColor
+    local color = self.color
+    local highlight = false
+
+    if targeting:isSet() then
+      if targeting:isSource(self) then
+        highlight = true
+        color = self.untargetableColor
+      elseif targeting:isSelected(self) then
+        highlight = true
+        borderColor = self.selectedBorderColor
+      elseif not targeting:isTargetable(self) then
+        color = self.untargetableColor
+      end
+    end
+
+    if highlight then
+      rectangleEngine.paintPadded(
+        self.highlightColor, self.left, self.top, self.width, self.height, 3)
+    end
+
+    rectangleEngine.paintPadded(
+      borderColor, self.left, self.top, self.width, self.height, 1)
+    rectangleEngine.paint(
+      color, self.left, self.top, self.width, self.height)
+
+    textEngine.paint(
+      self.textColor,
+      self.font,
+      self.text,
+      self.left + self.margin[1],
+      self.top + self.margin[2])
+
+    local boxColors = self:getBoxColors()
+    local boxValue = self:getBoxValue()
+    local boxWidth = 50
+    local boxLeft = self.left + self.width - boxWidth
+    rectangleEngine.paint(
+      boxColors.background, boxLeft, self.top, boxWidth, self.height)
+    rectangleEngine.paint(
+      boxColors.foreground, boxLeft - unscaleF(1), self.top, unscaleF(1), self.height)
+    local boxText = textEngine.getTextObject(self.font, tostring(boxValue))
+    textEngine.paintTextObject(
+      boxColors.foreground,
+      boxText,
+      math.floor(boxLeft + boxWidth / 2 - unscaleF(boxText:getWidth()) / 2),
+      self.top + self.margin[2])
+  end,
 })
 
 local column = proto.object:extend({
@@ -226,6 +278,7 @@ return {
   targeting = targeting,
   rectangle = rectangle,
   card = card,
+  boxCard = boxCard,
   spacer = spacer,
   heading = heading,
   column = column,
