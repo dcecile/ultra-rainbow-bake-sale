@@ -1,0 +1,81 @@
+local colors = require('colors')
+local settingsScreen = require('settingsScreen')
+local cupcakeScreen = require('cupcakeScreen')
+local doneScreen = require('doneScreen')
+local particleEngine = require('particleEngine')
+local rectangleEngine = require('rectangleEngine')
+local resolutionEngine = require('resolutionEngine')
+local textEngine = require('textEngine')
+local ui = require('ui')
+local utils = require('utils')
+
+local unscaleF = resolutionEngine.unscaleFloat
+
+local styledColumn = ui.column:extend({
+  margin = 10
+})
+
+local columnSpacing = 70
+
+local styledCardParticle = particleEngine.cardParticle:extend({
+  duration = 500,
+  color = colors.cardParticle,
+  size = 16,
+})
+
+local pathRadius = columnSpacing / 2
+
+local styledBoxCard = ui.boxCard:extend({
+  color = colors.card,
+  borderColor = colors.text,
+  textColor = colors.text,
+  highlightColor = colors.highlightColor,
+  selectedBorderColor = colors.selectedBorderColor,
+  untargetableColor = colors.untargetableColor,
+  width = 300,
+  height = 50,
+  margin = { 13, 12 },
+  font = 'big',
+})
+
+local styledSpacer = ui.spacer:extend({
+  width = styledBoxCard.width,
+  margin = { 20, 6, 1 },
+  color = colors.spacer,
+})
+
+local styledSpacerSymmetrical = styledSpacer:extend({
+  margin = { styledSpacer.margin[1], styledSpacer.margin[2], styledSpacer.margin[2] },
+})
+
+local styledHeading = ui.heading:extend({
+  height = 20,
+  width = styledBoxCard.width,
+  color = colors.heading,
+  font = 'small',
+})
+
+local styledPile = styledBoxCard:extend({
+  remove = ui.column.remove,
+  insert = ui.column.insert,
+  textColor = colors.cardPile.foreground,
+  borderColor = colors.cardPile.foreground,
+  getBoxColors = function (self)
+    return colors.cardPile
+  end,
+  getBoxValue = function (self)
+    return #self.cards
+  end,
+})
+
+return {
+  styledColumn = styledColumn,
+  columnSpacing = columnSpacing,
+  styledCardParticle = styledCardParticle,
+  pathRadius = pathRadius,
+  styledBoxCard = styledBoxCard,
+  styledSpacer = styledSpacer,
+  styledSpacerSymmetrical = styledSpacerSymmetrical,
+  styledHeading = styledHeading,
+  styledPile = styledPile,
+}

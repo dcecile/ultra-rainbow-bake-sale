@@ -1,4 +1,5 @@
 local colors = require('colors')
+local gameUi = require('gameUi')
 local settingsScreen = require('settingsScreen')
 local cupcakeScreen = require('cupcakeScreen')
 local doneScreen = require('doneScreen')
@@ -11,71 +12,14 @@ local utils = require('utils')
 
 local unscaleF = resolutionEngine.unscaleFloat
 
-local styledColumn = ui.column:extend({
-  margin = 10
-})
-
-local columnSpacing = 70
-
-local styledCardParticle = particleEngine.cardParticle:extend({
-  duration = 500,
-  color = colors.cardParticle,
-  size = 16,
-})
-
-local pathRadius = columnSpacing / 2
-
-local styledBoxCard = ui.boxCard:extend({
-  color = colors.card,
-  borderColor = colors.text,
-  textColor = colors.text,
-  highlightColor = colors.highlightColor,
-  selectedBorderColor = colors.selectedBorderColor,
-  untargetableColor = colors.untargetableColor,
-  width = 300,
-  height = 50,
-  margin = { 13, 12 },
-  font = 'big',
-})
-
-local styledSpacer = ui.spacer:extend({
-  width = styledBoxCard.width,
-  margin = { 20, 6, 1 },
-  color = colors.spacer,
-})
-
-local styledSpacerSymmetrical = styledSpacer:extend({
-  margin = { styledSpacer.margin[1], styledSpacer.margin[2], styledSpacer.margin[2] },
-})
-
-local styledHeading = ui.heading:extend({
-  height = 20,
-  width = styledBoxCard.width,
-  color = colors.heading,
-  font = 'small',
-})
-
-local styledPile = styledBoxCard:extend({
-  remove = ui.column.remove,
-  insert = ui.column.insert,
-  textColor = colors.cardPile.foreground,
-  borderColor = colors.cardPile.foreground,
-  getBoxColors = function (self)
-    return colors.cardPile
-  end,
-  getBoxValue = function (self)
-    return #self.cards
-  end,
-})
-
-local discardPile = styledPile:extend({
+local discardPile = gameUi.styledPile:extend({
   text = 'Discard pile',
   description =
     'Used and acquired cards\n'
     .. 'go here.',
 })
 
-local drawPile = styledPile:extend({
+local drawPile = gameUi.styledPile:extend({
   text = 'Draw pile',
   description =
     'These are the cards that\n'
@@ -107,9 +51,9 @@ local drawPile = styledPile:extend({
   cards = {},
 })
 
-local styledDeckCardColumn = styledColumn:extend({
+local deckCardColumn = gameUi.styledColumn:extend({
   cards = {},
-  minHeight = styledBoxCard.height * 5 + styledColumn.margin * 4,
+  minHeight = gameUi.styledBoxCard.height * 5 + gameUi.styledColumn.margin * 4,
   maxCards = 5,
   tryDiscard = function (self, number, source, block)
     if number <= 0 then
@@ -140,7 +84,7 @@ local styledDeckCardColumn = styledColumn:extend({
   end,
 })
 
-local handHeading = styledHeading:extend({
+local handHeading = gameUi.styledHeading:extend({
   text = 'Hand',
   description =
     'Current thoughts, feelings,\n'
@@ -149,9 +93,9 @@ local handHeading = styledHeading:extend({
     .. 'and use.',
 })
 
-local hand = styledDeckCardColumn:extend()
+local hand = deckCardColumn:extend()
 
-local mindsetHeading = styledHeading:extend({
+local mindsetHeading = gameUi.styledHeading:extend({
   text = 'Mindset',
   description =
     'Persistent philosophies\n'
@@ -161,9 +105,9 @@ local mindsetHeading = styledHeading:extend({
     .. 'turn to get established.',
 })
 
-local mindset = styledDeckCardColumn:extend()
+local mindset = deckCardColumn:extend()
 
-local hope = styledBoxCard:extend({
+local hope = gameUi.styledBoxCard:extend({
   text = 'Hope',
   description =
     'Build up and find hope.\n'
@@ -196,7 +140,7 @@ local kitchen
 local morgan
 local alex
 
-local cupcakes = styledBoxCard:extend({
+local cupcakes = gameUi.styledBoxCard:extend({
   text = 'Total cupcakes',
   description =
     'The current recipe is for\n'
@@ -214,7 +158,7 @@ local cupcakes = styledBoxCard:extend({
   end,
 })
 
-local pendingCleanup = styledBoxCard:extend({
+local pendingCleanup = gameUi.styledBoxCard:extend({
   text = 'Pending cleanup',
   description =
     'Don’t forget to clean up\n'
@@ -231,7 +175,7 @@ local pendingCleanup = styledBoxCard:extend({
   end,
 })
 
-local kitchenAction = styledBoxCard:extend({
+local kitchenAction = gameUi.styledBoxCard:extend({
   isDone = false,
   isHidden = false,
   borderColor = colors.cupcakes.foreground,
@@ -290,13 +234,13 @@ local function addBatchActions(batch, precedingActions)
     precedingActions = {}
   end
 
-  batch.active = styledColumn:extend({
-    minHeight = styledBoxCard.height * 3 + styledColumn.margin * 2,
+  batch.active = gameUi.styledColumn:extend({
+    minHeight = gameUi.styledBoxCard.height * 3 + gameUi.styledColumn.margin * 2,
     cards = {},
   })
   batch.cards = {
-    styledSpacer:extend(),
-    styledHeading:extend({
+    gameUi.styledSpacer:extend(),
+    gameUi.styledHeading:extend({
       text = 'Batch #' .. batch.number,
       description =
         'Follow the recipe. Some\n'
@@ -489,7 +433,7 @@ local function addBatchActions(batch, precedingActions)
   end
 end
 
-local batch = styledColumn:extend({
+local batch = gameUi.styledColumn:extend({
   activeTimer = nil,
   tick = function (self, remove)
     if self.activeTimer then
@@ -527,7 +471,7 @@ local batch = styledColumn:extend({
   end,
 })
 
-kitchen = styledColumn:extend({
+kitchen = gameUi.styledColumn:extend({
   tick = function (self)
     local removals = {}
     local function remove(i)
@@ -561,7 +505,7 @@ kitchen = styledColumn:extend({
   end,
 })
 
-local playerCard = styledBoxCard:extend({
+local playerCard = gameUi.styledBoxCard:extend({
   refresh = function (self)
     if self:isClickable() then
       self.textColor = colors.player.foreground
@@ -629,7 +573,7 @@ alex = playerCard:extend({
     .. 'Best friend of Morgan.',
 })
 
-local libraryHeading = styledHeading:extend({
+local libraryHeading = gameUi.styledHeading:extend({
   text = 'Library',
   description =
     'New techniques to learn\n'
@@ -637,17 +581,17 @@ local libraryHeading = styledHeading:extend({
     .. 'to pay hope and aquire.',
 })
 
-local libraryCard = styledBoxCard:extend({
+local libraryCard = gameUi.styledBoxCard:extend({
   take = function (self, count)
     local previousParticle = nil
     for i = 1, count do
       local newCard = self.card:extend()
       discardPile:insert(newCard)
-      local currentParticle = styledCardParticle:extend({
-        origin = self:getLeftCenter(styledCardParticle.size / 2),
-        target = discardPile:getRightCenter(styledCardParticle.size / 2),
+      local currentParticle = gameUi.styledCardParticle:extend({
+        origin = self:getLeftCenter(gameUi.styledCardParticle.size / 2),
+        target = discardPile:getRightCenter(gameUi.styledCardParticle.size / 2),
         duration = self.animationDuration,
-        path = particleEngine.essPath(pathRadius),
+        path = particleEngine.essPath(gameUi.pathRadius),
       })
       if not previousParticle then
         particleEngine.add(currentParticle)
@@ -691,7 +635,7 @@ local libraryCard = styledBoxCard:extend({
   end,
 })
 
-local deckCard = styledBoxCard:extend({
+local deckCard = gameUi.styledBoxCard:extend({
   column = discardPile,
   clicked = function (self)
     local cost = self.cost
@@ -717,10 +661,10 @@ local deckCard = styledBoxCard:extend({
   moveToHand = function (self)
     self.column:remove(self)
     hand:insert(self)
-    particleEngine.add(styledCardParticle:extend({
-      origin = drawPile:getLeftCenter(styledCardParticle.size / 2),
-      target = self:getLeftCenter(styledCardParticle.size / 2),
-      path = particleEngine.seePath(pathRadius, -1),
+    particleEngine.add(gameUi.styledCardParticle:extend({
+      origin = drawPile:getLeftCenter(gameUi.styledCardParticle.size / 2),
+      target = self:getLeftCenter(gameUi.styledCardParticle.size / 2),
+      path = particleEngine.seePath(gameUi.pathRadius, -1),
     }))
     self.column = hand
     self.action = self.play
@@ -729,14 +673,14 @@ local deckCard = styledBoxCard:extend({
   end,
   tryMoveToMindset = function (self, block)
     mindset:tryDiscardToMax(1, self, function ()
-      local origin = self:getLeftCenter(styledCardParticle.size / 2)
+      local origin = self:getLeftCenter(gameUi.styledCardParticle.size / 2)
       self.column:remove(self)
       mindset:insert(self)
-      local target = self:getLeftCenter(styledCardParticle.size / 2)
-      particleEngine.add(styledCardParticle:extend({
+      local target = self:getLeftCenter(gameUi.styledCardParticle.size / 2)
+      particleEngine.add(gameUi.styledCardParticle:extend({
         origin = origin,
         target = target,
-        path = particleEngine.seePath(pathRadius, -1),
+        path = particleEngine.seePath(gameUi.pathRadius, -1),
       }))
       self.column = mindset
       self.action = self.activate
@@ -746,10 +690,10 @@ local deckCard = styledBoxCard:extend({
     end)
   end,
   moveToDiscard = function (self)
-    particleEngine.add(styledCardParticle:extend({
-      origin = self:getRightCenter(styledCardParticle.size / 2),
-      target = discardPile:getRightCenter(styledCardParticle.size / 2),
-      path = particleEngine.seePath(pathRadius, 1),
+    particleEngine.add(gameUi.styledCardParticle:extend({
+      origin = self:getRightCenter(gameUi.styledCardParticle.size / 2),
+      target = discardPile:getRightCenter(gameUi.styledCardParticle.size / 2),
+      path = particleEngine.seePath(gameUi.pathRadius, 1),
     }))
     self.column:remove(self)
     discardPile:insert(self)
@@ -874,7 +818,7 @@ local ennui = deckCard:extend({
 
 local ennuiLibraryCard = libraryCard:make(ennui)
 ennuiLibraryCard.getBoxValue = ennui.getBoxValue
-ennuiLibraryCard.animationDuration = styledCardParticle.duration * 2
+ennuiLibraryCard.animationDuration = gameUi.styledCardParticle.duration * 2
 
 local curiosity = deckCard:extend({
   play = function (self, pay)
@@ -956,7 +900,7 @@ local function startTurn()
   kitchen:tick()
 end
 
-local endTurn = styledBoxCard:extend({
+local endTurn = gameUi.styledBoxCard:extend({
   text = 'End turn',
   description =
     'When there’s nothing left\n'
@@ -989,7 +933,7 @@ local endTurn = styledBoxCard:extend({
   end,
 })
 
-local kitchenMinutes = styledBoxCard:extend({
+local kitchenMinutes = gameUi.styledBoxCard:extend({
   text = 'Kitchen minutes left',
   description =
     'The kitchen actually\n'
@@ -1018,8 +962,8 @@ local infoBox = ui.rectangle:extend({
   color = colors.lightBackground,
   textColor = colors.text,
   highlightColor = colors.highlightColor,
-  margin = styledBoxCard.margin,
-  width = styledBoxCard.width,
+  margin = gameUi.styledBoxCard.margin,
+  width = gameUi.styledBoxCard.width,
   height = 315,
   paint = function (self)
     if ui.targeting:isSet() and ui.targeting:isSource(self) then
@@ -1058,7 +1002,7 @@ local settingsButton = ui.card:extend({
   borderColor = infoBox.borderColor,
   textColor = infoBox.textColor,
   width = infoBox.width,
-  height = styledBoxCard.height,
+  height = gameUi.styledBoxCard.height,
   margin = { 13, 12 },
   font = 'big',
   text = 'Settings',
@@ -1068,43 +1012,43 @@ local settingsButton = ui.card:extend({
   end,
 })
 
-local bakingColumn = styledColumn:extend({
+local bakingColumn = gameUi.styledColumn:extend({
   left = 60,
   top = 60,
   cards = {
     cupcakes,
     pendingCleanup,
-    styledSpacerSymmetrical:extend(),
+    gameUi.styledSpacerSymmetrical:extend(),
     morgan,
     alex,
     kitchen,
   }
 })
 
-local mainColumn = styledColumn:extend({
-  left = bakingColumn.left + styledBoxCard.width + columnSpacing,
+local mainColumn = gameUi.styledColumn:extend({
+  left = bakingColumn.left + gameUi.styledBoxCard.width + gameUi.columnSpacing,
   top = 60,
   cards = {
     discardPile,
     drawPile,
-    styledSpacer:extend(),
+    gameUi.styledSpacer:extend(),
     handHeading,
     hand,
-    styledSpacer:extend(),
+    gameUi.styledSpacer:extend(),
     mindsetHeading,
     mindset,
-    styledSpacerSymmetrical:extend(),
+    gameUi.styledSpacerSymmetrical:extend(),
     endTurn,
     kitchenMinutes,
   }
 })
 
-local libraryColumn = styledColumn:extend({
-  left = mainColumn.left + styledBoxCard.width + columnSpacing,
+local libraryColumn = gameUi.styledColumn:extend({
+  left = mainColumn.left + gameUi.styledBoxCard.width + gameUi.columnSpacing,
   top = 60,
   cards = {
     hope,
-    styledSpacer:extend(),
+    gameUi.styledSpacer:extend(),
     libraryHeading,
     ennuiLibraryCard,
     libraryCard:make(feelingOfHope),
@@ -1113,9 +1057,9 @@ local libraryColumn = styledColumn:extend({
     libraryCard:make(intenseCuriosity),
     libraryCard:make(itGetsBetter),
     libraryCard:make(knowledgeIsPower),
-    styledSpacerSymmetrical:extend(),
+    gameUi.styledSpacerSymmetrical:extend(),
     infoBox,
-    styledSpacerSymmetrical:extend(),
+    gameUi.styledSpacerSymmetrical:extend(),
     settingsButton,
   }
 })
