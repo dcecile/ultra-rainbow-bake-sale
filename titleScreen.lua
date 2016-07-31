@@ -21,12 +21,9 @@ local screen = ui.screen:extend({
         math.floor(height / 2 - titleText:getHeight() / 2))
   end,
   mousepressed = function (self, x, y, button, istouch)
-    if not self.mute then
-      audioEngine.startMusic()
-    end
+    audioEngine.startMusic()
     self:showNext()
   end,
-  mute = false,
 })
 
 return {

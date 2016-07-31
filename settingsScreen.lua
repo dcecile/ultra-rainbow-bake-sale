@@ -1,3 +1,4 @@
+local audioEngine = require('audioEngine')
 local colors = require('colors')
 local currentScreen = require('currentScreen')
 local rectangleEngine = require('rectangleEngine')
@@ -23,6 +24,26 @@ local settingsSpacer = ui.spacer:extend({
 })
 
 local screen
+
+local backgroundMusic = settingsCard:extend({
+  text = 'Background music',
+  refresh = function (self)
+    self.isOn = audioEngine.getMusicIsOn()
+  end,
+  clicked = function (self)
+    audioEngine.setMusicIsOn(not self.isOn)
+  end,
+})
+
+local fullscreen = settingsCard:extend({
+  text = 'Fullscreen',
+  refresh = function (self)
+    self.isFullscreen = love.window.getFullscreen()
+  end,
+  clicked = function (self)
+    love.window.setFullscreen(not self.isFullscreen)
+  end,
+})
 
 local back = settingsCard:extend({
   text = 'Back',
@@ -55,6 +76,9 @@ screen = ui.screen:extend({
     margin = 24,
     cards = {
       title,
+      settingsSpacer:extend(),
+      backgroundMusic,
+      fullscreen,
       settingsSpacer:extend(),
       back,
       settingsSpacer:extend(),

@@ -1,14 +1,14 @@
 local music = nil
 
+local musicVolume = 0.3
+
 local function startMusic()
-  if not isMusicMuted then
-    if not music then
-      music = love.audio.newSource('bensound-anewbeginning.mp3')
-      music:setVolume(0.3)
-      music:setLooping(true)
-    end
-    love.audio.play(music)
+  if not music then
+    music = love.audio.newSource('bensound-anewbeginning.mp3')
+    music:setVolume(musicVolume)
+    music:setLooping(true)
   end
+  love.audio.play(music)
 end
 
 local function stopMusic()
@@ -17,7 +17,25 @@ local function stopMusic()
   end
 end
 
+local function getMusicIsOn()
+  return musicVolume > 0
+end
+
+local function setMusicIsOn(on)
+  if on then
+    musicVolume = 0.3
+  else
+    musicVolume = 0
+  end
+  if music then
+    print('setMusicIsOn', musicVolume)
+    music:setVolume(musicVolume)
+  end
+end
+
 return {
   startMusic = startMusic,
   stopMusic = stopMusic,
+  getMusicIsOn = getMusicIsOn,
+  setMusicIsOn = setMusicIsOn,
 }

@@ -1,13 +1,11 @@
+local audioEngine = require('audioEngine')
 local creditsScreen = require('creditsScreen')
 local currentScreen = require('currentScreen')
 local debugMode = require('debugMode')
 local game = require('game')
-local proto = require('proto')
 local resolutionEngine = require('resolutionEngine')
-local settingsScreen = require('settingsScreen')
 local textEngine = require('textEngine')
 local titleScreen = require('titleScreen')
-local ui = require('ui')
 
 local unscaleF = resolutionEngine.unscaleFloat
 
@@ -34,7 +32,7 @@ function love.load()
   creditsScreen.screen.next = titleScreen.screen
 
   if debugMode.isActive then
-    titleScreen.screen.mute = true
+    audioEngine.setMusicIsOn(false)
     game.screen:show()
     game.screen:start()
   end
