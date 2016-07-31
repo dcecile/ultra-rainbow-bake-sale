@@ -308,8 +308,6 @@ local function addBatchActions(batch, precedingActions)
   }
   batch.actions = {}
 
-  local nextPrecedingActions
-
   local measureDry = add({
     text = 'Measure dry',
     description =
@@ -434,11 +432,7 @@ local function addBatchActions(batch, precedingActions)
       .. 'The present self prepares\n'
       .. 'for the future self.',
     runCost = 6,
-    depends = { mixAll, precedingActions.cleanBag },
-    run = function (self)
-      kitchenAction.run(self)
-      batch.startBatch(nextPrecedingActions)
-    end,
+    depends = { mixAll },
   })
   local decorate = add({
     text = 'Decorate with icing',
@@ -488,11 +482,11 @@ local function addBatchActions(batch, precedingActions)
     cleanBag.runCost = 2
     cleanBag.cleanupTrigger = putInOven
   end
-  nextPrecedingActions = {
-    takeOut = takeOut,
-    cleanBag = cleanBag,
-    makeIcing = makeIcing,
-  }
+  return function ()
+    batch.startBatch({
+      takeOut = takeOut,
+    })
+  end
 end
 
 local batch = styledColumn:extend({
@@ -556,11 +550,14 @@ kitchen = styledColumn:extend({
     local newBatch = batch:extend({
       number = number,
       startBatch = function (...)
-        self:startBatch(number + 1, ...)
+        if number < 2 then
+          self:startBatch(number + 1, ...)
+        end
       end,
     })
-    addBatchActions(newBatch, ...)
+    local startNextBatch = addBatchActions(newBatch, ...)
     self:insert(newBatch)
+    startNextBatch()
   end,
 })
 
