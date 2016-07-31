@@ -1,4 +1,3 @@
-Cleanup count not cost
 Completely decoupled batches
 Persistent settings
 Character idle actions

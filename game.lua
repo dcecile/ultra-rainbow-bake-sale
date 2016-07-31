@@ -227,7 +227,7 @@ local pendingCleanup = styledBoxCard:extend({
     return colors.cupcakes
   end,
   getBoxValue = function (self)
-    return kitchen:getCleanupCost()
+    return kitchen:getCleanupCount()
   end,
 })
 
@@ -263,6 +263,14 @@ local kitchenAction = styledBoxCard:extend({
       end
     end
     return 0
+  end,
+  getCleanupCount = function (self)
+    local cost = self:getCleanupCost()
+    if cost > 0 then
+      return 1
+    else
+      return 0
+    end
   end,
 })
 
@@ -519,6 +527,10 @@ local batch = styledColumn:extend({
     return utils.sum(self.active.cards, utils.method.getCleanupCost)
       + utils.sum(self.actions, utils.method.getCleanupCost)
   end,
+  getCleanupCount = function (self)
+    return utils.sum(self.active.cards, utils.method.getCleanupCount)
+      + utils.sum(self.actions, utils.method.getCleanupCount)
+  end,
 })
 
 kitchen = styledColumn:extend({
@@ -536,6 +548,9 @@ kitchen = styledColumn:extend({
   end,
   getCleanupCost = function (self)
     return utils.sum(self.cards, utils.method.getCleanupCost)
+  end,
+  getCleanupCount = function (self)
+    return utils.sum(self.cards, utils.method.getCleanupCount)
   end,
   startBatch = function (self, number, ...)
     local newBatch = batch:extend({
