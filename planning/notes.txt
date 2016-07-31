@@ -29,6 +29,7 @@
   - remove discarded card for mana
   - duplicate a card (pay fixed mana, discard all 3)
   - pay normal cost to gain card directly to hand
+  - purge all of one card
 - base attributes
   - play cost
   - buy cost
@@ -39,6 +40,15 @@
   - counter
   - reaction
   - global reduce cost
+- abilities
+  - draw one duplicate from discard
+  - temporary invulnerability to using a mindset
+  - extra removal
+  - extra hope
+  - extra draw
+  - lower buy cost
+  - buy double
+  - buy to hand
 - card types
   - recipe
     - Rainbow cupcake

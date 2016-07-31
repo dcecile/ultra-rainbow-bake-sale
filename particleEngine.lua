@@ -158,6 +158,10 @@ local cardParticle = proto.object:extend({
   end,
 })
 
+local function reset()
+  active = {}
+end
+
 local function add(particle)
   particle:init()
   table.insert(active, particle)
@@ -183,6 +187,7 @@ local function paint()
 end
 
 return {
+  reset = reset,
   add = add,
   update = update,
   paint = paint,

@@ -679,19 +679,25 @@ local libraryHeading = styledHeading:extend({
 
 local libraryCard = styledBoxCard:extend({
   take = function (self, count)
-    local newCard = self.card:extend()
-    discardPile:insert(newCard)
-    particleEngine.add(styledCardParticle:extend({
-      origin = self:getLeftCenter(styledCardParticle.size / 2),
-      target = discardPile:getRightCenter(styledCardParticle.size / 2),
-      duration = self.animationDuration,
-      path = particleEngine.essPath(pathRadius),
-      next = function ()
-        if count > 1 then
-          self:take(count - 1)
+    local previousParticle = nil
+    for i = 1, count do
+      local newCard = self.card:extend()
+      discardPile:insert(newCard)
+      local currentParticle = styledCardParticle:extend({
+        origin = self:getLeftCenter(styledCardParticle.size / 2),
+        target = discardPile:getRightCenter(styledCardParticle.size / 2),
+        duration = self.animationDuration,
+        path = particleEngine.essPath(pathRadius),
+      })
+      if not previousParticle then
+        particleEngine.add(currentParticle)
+      else
+        previousParticle.next = function ()
+          particleEngine.add(currentParticle)
         end
-      end,
-    }))
+      end
+      previousParticle = currentParticle
+    end
   end,
   clicked = function (self)
     hope:tryPay(self.card.buyCost, function ()
@@ -1196,6 +1202,7 @@ screen = ui.screen:extend({
     ui.targeting.continue = false
   end,
   start = function (self)
+    particleEngine.reset()
     discardPile.cards = {
       glimmerOfHope:extend(),
       glimmerOfHope:extend(),
