@@ -4,6 +4,8 @@ local resolutionEngine = require('resolutionEngine')
 local textEngine = require('textEngine')
 local ui = require('ui')
 
+local screen
+
 local creditsCard = ui.card:extend({
   color = colors.textBox,
   borderColor = colors.inverseText,
@@ -13,8 +15,6 @@ local creditsCard = ui.card:extend({
   margin = { 13, 12 },
   font = 'big',
 })
-
-local screen
 
 local newGame = creditsCard:extend({
   text = 'New game',

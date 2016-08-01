@@ -7,6 +7,8 @@ local textEngine = require('textEngine')
 local ui = require('ui')
 local versionNumber = require('versionNumber')
 
+local screen
+
 local settingsCard = ui.card:extend({
   color = colors.card,
   borderColor = colors.text,
@@ -27,10 +29,6 @@ local settingsBoxCard = ui.boxCard:extend({
   font = settingsCard.font,
   getBoxColors = function (self)
     return colors.cupcakes
-    --return {
-      --foreground = settingsCard.textColor,
-      --background = settingsCard.color,
-    --}
   end,
 })
 
@@ -39,8 +37,6 @@ local settingsSpacer = ui.spacer:extend({
   margin = { 12, 6, 1 },
   color = colors.spacer,
 })
-
-local screen
 
 local backgroundMusic = settingsBoxCard:extend({
   text = 'Background music',
@@ -116,8 +112,8 @@ screen = ui.screen:extend({
       version,
     }
   }),
-  show = function (self, next)
-    self.next = next
+  show = function (self)
+    self.next = currentScreen.get()
     ui.screen.show(self)
   end,
   update = function (self, time)

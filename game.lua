@@ -1,8 +1,9 @@
 local colors = require('colors')
-local cupcakeScreen = require('cupcakeScreen')
 local doneScreen = require('doneScreen')
+local gameCupcakeBatch = require('gameCupcakeBatch')
 local gameDeckBasics = require('gameDeckBasics')
 local gameDeckCards = require('gameDeckCards')
+local gameKitchenBasics = require('gameKitchenBasics')
 local gameUi = require('gameUi')
 local particleEngine = require('particleEngine')
 local rectangleEngine = require('rectangleEngine')
@@ -10,450 +11,19 @@ local resolutionEngine = require('resolutionEngine')
 local settingsScreen = require('settingsScreen')
 local textEngine = require('textEngine')
 local ui = require('ui')
-local utils = require('utils')
 
+local alex = gameKitchenBasics.alex
+local cupcakes = gameKitchenBasics.cupcakes
 local discardPile = gameDeckBasics.discardPile
 local drawPile = gameDeckBasics.drawPile
 local hand = gameDeckBasics.hand
 local hope = gameDeckBasics.hope
+local kitchen = gameKitchenBasics.kitchen
 local mindset = gameDeckBasics.mindset
-
-local kitchen
-local morgan
-local alex
-
-local cupcakes = gameUi.styledBoxCard:extend({
-  text = 'Total cupcakes',
-  description =
-    'The current recipe is for\n'
-    .. 'cupcakes. Bake and\n'
-    .. 'decorate, to prepare for\n'
-    .. 'tomorrow’s bake sale.',
-  value = 0,
-  textColor = colors.cupcakes.foreground,
-  borderColor = colors.cupcakes.foreground,
-  getBoxColors = function (self)
-    return colors.cupcakes
-  end,
-  getBoxValue = function (self)
-    return self.value
-  end,
-})
-
-local pendingCleanup = gameUi.styledBoxCard:extend({
-  text = 'Pending cleanup',
-  description =
-    'Don’t forget to clean up\n'
-    .. 'the kitchen. During baking\n'
-    .. 'is less stressful than after\n'
-    .. 'baking.',
-  textColor = colors.cupcakes.foreground,
-  borderColor = colors.cupcakes.foreground,
-  getBoxColors = function (self)
-    return colors.cupcakes
-  end,
-  getBoxValue = function (self)
-    return kitchen:getCleanupCount()
-  end,
-})
-
-local kitchenAction = gameUi.styledBoxCard:extend({
-  isDone = false,
-  isHidden = false,
-  borderColor = colors.cupcakes.foreground,
-  refresh = function (self)
-    if (not morgan.isBusy or not alex.isBusy) and hope.value >= self.runCost then
-      self.boxColors = colors.hope
-      self.textColor = colors.cupcakes.foreground
-    else
-      self.boxColors = colors.hopeDisabled
-      self.textColor = colors.disabledText
-    end
-  end,
-  getBoxColors = function (self)
-    return self.boxColors
-  end,
-  getBoxValue = function (self)
-    return self.runCost
-  end,
-  run = function (self)
-    self.isDone = true
-    if not self.isHidden then
-      self.batch.active:remove(self)
-    end
-  end,
-  getCleanupCost = function (self)
-    if self.cleanupTrigger then
-      if self.cleanupTrigger.isDone and not self.isDone then
-        return self.runCost
-      end
-    end
-    return 0
-  end,
-  getCleanupCount = function (self)
-    local cost = self:getCleanupCost()
-    if cost > 0 then
-      return 1
-    else
-      return 0
-    end
-  end,
-})
+local morgan = gameKitchenBasics.morgan
+local pendingCleanup = gameKitchenBasics.pendingCleanup
 
 local screen
-
-local function addBatchActions(batch, precedingActions)
-  local function add(properties)
-    local card = kitchenAction:extend(properties)
-    card.batch = batch
-    if not card.isHidden then
-      table.insert(batch.actions, card)
-    end
-    return card
-  end
-
-  if not precedingActions then
-    precedingActions = {}
-  end
-
-  batch.active = gameUi.styledColumn:extend({
-    minHeight = gameUi.styledBoxCard.height * 3 + gameUi.styledColumn.margin * 2,
-    cards = {},
-  })
-  batch.cards = {
-    gameUi.styledSpacer:extend(),
-    gameUi.styledHeading:extend({
-      text = 'Batch #' .. batch.number,
-      description =
-        'Follow the recipe. Some\n'
-        .. 'tasks are harder than\n'
-        .. 'others. Morgan and Alex\n'
-        .. 'are keen to start.',
-    }),
-    batch.active,
-  }
-  batch.actions = {}
-
-  local measureDry = add({
-    text = 'Measure dry',
-    description =
-      'Measure out the flours,\n'
-      .. 'sugars, salts, spices, and\n'
-      .. 'rising agents.',
-    runCost = 1,
-    depends = {},
-  })
-  local measureWet = add({
-    text = 'Measure wet',
-    description =
-      'Measure out the milk and\n'
-      .. 'oil. Don’t forget vanilla.',
-    runCost = 1,
-    depends = {},
-  })
-  local cleanCups = add({
-    text = 'Clean measuring cups',
-    description =
-      'Responsibility means\n'
-      .. 'cleaning up after making\n'
-      .. 'a mess.',
-    runCost = 2,
-    cleanupTrigger = measureDry,
-    depends = { measureDry, measureWet },
-  })
-  local mixAll = add({
-    text = 'Mix together',
-    description =
-      'Sift to avoid packing. Pour\n'
-      .. 'into the well. Mix only until\n'
-      .. 'dry ingredients are\n'
-      .. 'moistened. Basically done.',
-    runCost = 2,
-    depends = { measureDry, measureWet },
-  })
-  local pour = add({
-    text = 'Pour batter',
-    description =
-      'Fill each cupcake liner\n'
-      .. 'about three quarters full.\n'
-      .. 'The journey is the\n'
-      .. 'destination.',
-    runCost = 4,
-    depends = { mixAll },
-  })
-  local cleanBowl = add({
-    text = 'Clean mixing bowl',
-    description =
-      'No matter how big the\n'
-      .. 'problem.',
-    runCost = 4,
-    cleanupTrigger = mixAll,
-    depends = { cleanCups, pour },
-  })
-  local cleanUtensils = add({
-    text = 'Clean utensils',
-    description =
-      'But friends will always be\n'
-      .. 'there to lend a hand.',
-    runCost = 2,
-    cleanupTrigger = measureDry,
-    depends = { cleanBowl },
-  })
-  local bakeTimer = add({
-    text = 'Bake timer',
-    runCost = 3,
-    depends = {},
-    isHidden = true,
-  })
-  local burnt
-  local putInOven = add({
-    text = 'Put in oven',
-    description =
-      'In it goes. Hopefully the\n'
-      .. 'portions are correct. Be\n'
-      .. 'patient, and accept the\n'
-      .. 'flow of time.',
-    runCost = 6,
-    depends = { pour, precedingActions.takeOut },
-    run = function (self)
-      kitchenAction.run(self)
-      batch.activeTimer = function ()
-        bakeTimer.runCost = bakeTimer.runCost - 1
-        if bakeTimer.runCost == 0 then
-          bakeTimer:run()
-        elseif bakeTimer.runCost == -1 then
-          batch.activeTimer = nil
-          burnt()
-        end
-      end
-    end,
-  })
-  local takeOut = add({
-    text = 'Take out',
-    description =
-      'It’s done! But it does’t look\n'
-      .. 'like cupcakes.',
-    runCost = 4,
-    depends = { bakeTimer },
-    run = function (self)
-      kitchenAction.run(self)
-      batch.activeTimer = nil
-    end
-  })
-  local cleanSheet = add({
-    text = 'Clean baking sheet',
-    description =
-      'They’ll understand that\n'
-      .. 'some messes are fun and\n'
-      .. 'others are funny.',
-    runCost = 1,
-    cleanupTrigger = takeOut,
-    depends = { cleanUtensils, takeOut },
-  })
-  local makeIcing = add({
-    text = 'Make icing',
-    description =
-      'Very, very sweet. Use\n'
-      .. 'all-natural food colouring.\n'
-      .. 'The present self prepares\n'
-      .. 'for the future self.',
-    runCost = 6,
-    depends = { mixAll },
-  })
-  local decorate = add({
-    text = 'Decorate with icing',
-    description =
-      'Ah, the finishing touch. It’s\n'
-      .. 'okay to get excited here\n'
-      .. 'and just go wild. Show\n'
-      .. 'them your free spirit!',
-    runCost = 10,
-    depends = { makeIcing, takeOut },
-    run = function (self)
-      kitchenAction.run(self)
-      cupcakes.value = cupcakes.value + 12
-      cupcakeScreen.screen:show(screen)
-    end,
-  })
-  local cleanBag = add({
-    text = 'Clean piping bag',
-    description =
-      'In the end, life itself is one\n'
-      .. 'big series of messes.',
-    runCost = 6,
-    cleanupTrigger = makeIcing,
-    depends = { cleanSheet, decorate },
-  })
-  function burnt()
-    takeOut.isDone = true
-    decorate.isDone = true
-    batch.active:remove(takeOut)
-    if not makeIcing.isDone then
-      makeIcing.isDone = true
-      batch.active:remove(makeIcing)
-    else
-      local extraCleanup = add({
-        text = cleanBag.text,
-        description = cleanBag.description,
-        runCost = cleanBag.runCost,
-        cleanupTrigger = cleanBag.cleanupTrigger,
-        depends = cleanBag.depends,
-      })
-      cleanBag.depends = { extraCleanup }
-    end
-    cleanBag.text = 'Toss burnt cupcakes'
-    cleanBag.description =
-      'Sometimes things don’t go\n'
-      .. 'as planned.'
-    cleanBag.runCost = 2
-    cleanBag.cleanupTrigger = putInOven
-  end
-  return function ()
-    batch.startBatch({
-      takeOut = takeOut,
-    })
-  end
-end
-
-local batch = gameUi.styledColumn:extend({
-  activeTimer = nil,
-  tick = function (self, remove)
-    if self.activeTimer then
-      self.activeTimer()
-    end
-    local newActions = {}
-    for i, action in ipairs(self.actions) do
-      if not action.isDone then
-        local ready = true
-        for j, depend in ipairs(action.depends) do
-          if not depend.isDone then
-            ready = false
-            break
-          end
-        end
-        if ready then
-          self.active:insert(action)
-        else
-          table.insert(newActions, action)
-        end
-      end
-    end
-    self.actions = newActions
-    if #self.actions == 0 and #self.active.cards == 0 then
-      remove()
-    end
-  end,
-  getCleanupCost = function (self)
-    return utils.sum(self.active.cards, utils.method.getCleanupCost)
-      + utils.sum(self.actions, utils.method.getCleanupCost)
-  end,
-  getCleanupCount = function (self)
-    return utils.sum(self.active.cards, utils.method.getCleanupCount)
-      + utils.sum(self.actions, utils.method.getCleanupCount)
-  end,
-})
-
-kitchen = gameUi.styledColumn:extend({
-  tick = function (self)
-    local removals = {}
-    local function remove(i)
-      table.insert(removals, i, 1)
-    end
-    for i, batch in ipairs(self.cards) do
-      batch:tick(function () remove(i) end)
-    end
-    for i, j in ipairs(removals) do
-      table.remove(self.cards, j)
-    end
-  end,
-  getCleanupCost = function (self)
-    return utils.sum(self.cards, utils.method.getCleanupCost)
-  end,
-  getCleanupCount = function (self)
-    return utils.sum(self.cards, utils.method.getCleanupCount)
-  end,
-  startBatch = function (self, number, ...)
-    local newBatch = batch:extend({
-      number = number,
-      startBatch = function (...)
-        if number < 2 then
-          self:startBatch(number + 1, ...)
-        end
-      end,
-    })
-    local startNextBatch = addBatchActions(newBatch, ...)
-    self:insert(newBatch)
-    startNextBatch()
-  end,
-})
-
-local playerCard = gameUi.styledBoxCard:extend({
-  refresh = function (self)
-    if self:isClickable() then
-      self.textColor = colors.player.foreground
-    else
-      self.textColor = colors.disabledText
-    end
-  end,
-  getBoxColors = function (self)
-    if self.isBusy then
-      return colors.playerDisabled
-    else
-      return colors.player
-    end
-  end,
-  getBoxValue = function (self)
-    return self.value
-  end,
-  clicked = function (self)
-    ui.targeting:set({
-      source = self,
-      isTargetable = function (card)
-        return card.runCost and hope.value >= card.runCost
-      end,
-      target = function (card)
-        hope:pay(card.runCost)
-        card:run()
-        self.value = self.value + 1
-        self.isBusy = true
-        ui.targeting:reset()
-      end,
-    })
-  end,
-  isClickable = function (self)
-    if not self.isBusy then
-      for i, batch in ipairs(kitchen.cards) do
-        for j, action in ipairs(batch.active.cards) do
-          if hope.value >= action.runCost then
-            return true
-          end
-        end
-      end
-    end
-    return false
-  end,
-})
-
-morgan = playerCard:extend({
-  text = 'Morgan',
-  description =
-    'Enthusiastic, kind, caring,\n'
-    .. 'and sensitive. Bullies call\n'
-    .. 'him gay, but he’s more\n'
-    .. 'worried about how other\n'
-    .. 'kids are affected. Best\n'
-    .. 'friend of Alex.',
-})
-
-alex = playerCard:extend({
-  text = 'Alex',
-  description =
-    'Strong, brave, caring, and\n'
-    .. 'insolent. Bullies call her\n'
-    .. 'gay, and it reminds her to\n'
-    .. 'stay proud and pissed off.\n'
-    .. 'Best friend of Morgan.',
-})
 
 local function startTurn()
   hope.value = 0
@@ -577,7 +147,7 @@ local settingsButton = ui.card:extend({
   text = 'Settings',
   description = 'Configure the program.',
   clicked = function (self)
-    settingsScreen.screen:show(screen)
+    settingsScreen.screen:show()
   end,
 })
 
@@ -687,7 +257,10 @@ screen = ui.screen:extend({
     mindset.cards = {}
     kitchen.cards = {}
     bakingColumn:refresh()
-    kitchen:startBatch(1)
+    local batch1 = gameCupcakeBatch.make(1)
+    kitchen:insert(batch1)
+    local batch2 = gameCupcakeBatch.make(2, batch1)
+    kitchen:insert(batch2)
     morgan.value = 0
     alex.value = 0
     cupcakes.value = 0

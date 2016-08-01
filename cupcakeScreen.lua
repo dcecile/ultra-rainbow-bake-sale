@@ -1,4 +1,5 @@
 local colors = require('colors')
+local currentScreen = require('currentScreen')
 local rectangleEngine = require('rectangleEngine')
 local resolutionEngine = require('resolutionEngine')
 local ui = require('ui')
@@ -147,8 +148,8 @@ local screen = ui.screen:extend({
       165 + cupcakeY + 150,
       math.pi * (5 / 6 - 1 / 8))
   end,
-  show = function (self, next)
-    self.next = next
+  show = function (self)
+    self.next = currentScreen.get()
     ui.screen.show(self)
   end,
   mousepressed = function (self, x, y, button, istouch)
