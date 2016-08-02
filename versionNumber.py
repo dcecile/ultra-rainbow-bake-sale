@@ -11,12 +11,12 @@ def getProcessOutput(command):
   return process.stdout.strip()
 
 def getVersionNumber():
-  sourceDirectory = PurePath(__file__).parent
+  sourceDirectory = str(PurePath(__file__).parent)
   gitRevListCommand = (
-    [ 'git', '-C', str(sourceDirectory), 'rev-list', '--count', 'HEAD'])
+    [ 'git', '-C', sourceDirectory, 'rev-list', '--count', 'HEAD'])
   buildNumber = int(getProcessOutput(gitRevListCommand)) - 1
   gitStatusCommand = (
-    [ 'git', '-C', str(sourceDirectory), 'status', '--short'])
+    [ 'git', '-C', sourceDirectory, 'status', '--short'])
   modified = '+' if getProcessOutput(gitStatusCommand) else ''
   return '0.1.{0}{1}'.format(buildNumber, modified)
 

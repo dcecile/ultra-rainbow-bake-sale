@@ -8,9 +8,9 @@ import itertools
 import shutil
 import versionNumber
 
-def globAll(patterns):
+def globAll(root, patterns):
   return itertools.chain.from_iterable(
-    (glob.iglob(pattern) for pattern in patterns))
+    (glob.iglob(root + pattern) for pattern in patterns))
 
 def zipLogger(method):
   @functools.wraps(method)
@@ -25,8 +25,8 @@ def openCompressedZip(filename):
   zipFile.writestr = zipLogger(zipFile.writestr)
   return zipFile
 
-def writeLocalFiles(zipFile, *patterns):
-  for sourceName in globAll(patterns):
+def writeLocalFiles(zipFile, root, *patterns):
+  for sourceName in globAll(root, patterns):
     zipFile.write(sourceName)
 
 def buildVersionFile(version):
@@ -35,7 +35,8 @@ def buildVersionFile(version):
 def writeLoveFile(basename, version):
   filename = '{0}.love'.format(basename)
   with openCompressedZip(filename) as gameLoveFile:
-    writeLocalFiles(gameLoveFile, '*.lua', '*.txt', '*.mp3', '*.ttf')
+    writeLocalFiles(gameLoveFile, '', '*.lua', '*.txt', '*.mp3', '*.ttf')
+    writeLocalFiles(gameLoveFile, 'lib/serpent/src/', '*.lua')
     gameLoveFile.writestr(
       'packagedVersionNumber.lua',
       buildVersionFile(version))
@@ -57,7 +58,7 @@ def writeZippedFiles(destintationZipFile, sourceZipFile, pattern):
 def writeLoveMultiZipFile(basename):
   filename = '{0}-multi.zip'.format(basename)
   with openCompressedZip(filename) as gameZipFile:
-    writeLocalFiles(gameZipFile, '*.love', '*.txt')
+    writeLocalFiles(gameZipFile, '', '*.love', '*.txt')
   print('Done {0}'.format(filename))
 
 def writeLoveWin64ZipFile(basename):
@@ -67,7 +68,7 @@ def writeLoveWin64ZipFile(basename):
       gameZipFile.writestr(
         '{0}.exe'.format(basename),
         buildExe('{0}.love'.format(basename), loveZipFile))
-      writeLocalFiles(gameZipFile, '*.txt')
+      writeLocalFiles(gameZipFile, '', '*.txt')
       writeZippedFiles(gameZipFile, loveZipFile, '*.dll')
   print('Done {0}'.format(filename))
 

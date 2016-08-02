@@ -8,7 +8,7 @@ if debugMode.isActive then
   local pythonFile = io.popen(pythonCommand)
   number = pythonFile:read()
   if not number or not number:find('^%d+%.%d+.%d+%+?$') then
-    error(string.format('invalid version "%q"', tostring(number)))
+    error(string.format('invalid version %q', tostring(number)))
   end
   pythonFile:close()
 else

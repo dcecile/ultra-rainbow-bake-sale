@@ -267,7 +267,7 @@ screen = ui.screen:extend({
     endTurn.turnCounter = 18
 
     local seed = love.timer.getTime()
-    print('seed', seed)
+    print(string.format('Seeding game with %f', seed))
     math.randomseed(seed)
     mainColumn:refresh()
     drawPile:shuffle()

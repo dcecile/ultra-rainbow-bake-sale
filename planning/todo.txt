@@ -1,10 +1,8 @@
-Persistent settings
+Proper title screen
 Character idle actions
 
 Slack time indicator
 Following tasks indicator
-Write GSA members baking notes
-Write full emotional system notes
 Fix decorate with icing display glitch
 Keyboard shortcuts
 Keyboard shortcut hints

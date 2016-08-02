@@ -49,6 +49,8 @@
   - lower buy cost
   - buy double
   - buy to hand
+  - put mindset into play for free with haste
+  - untap mindset
 - card types
   - recipe
     - Rainbow cupcake

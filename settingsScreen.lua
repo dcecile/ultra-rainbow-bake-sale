@@ -3,11 +3,35 @@ local colors = require('colors')
 local currentScreen = require('currentScreen')
 local rectangleEngine = require('rectangleEngine')
 local resolutionEngine = require('resolutionEngine')
+local serpent = require('serpent')
 local textEngine = require('textEngine')
 local ui = require('ui')
 local versionNumber = require('versionNumber')
 
 local screen
+
+local settings = {
+  musicIsOn = true,
+  isFullscreen = false,
+}
+local settingsPath = 'settings.txt'
+
+local function load()
+  local settingsContents = love.filesystem.read(settingsPath)
+  if settingsContents then
+    local success, newSettings = serpent.load(settingsContents)
+    if success then
+      print(string.format('Loaded settings from %q', love.filesystem.getRealDirectory(settingsPath)))
+      settings = newSettings
+    end
+  end
+  return settings
+end
+
+local function save()
+  local settingsContents = serpent.block(settings, { comment = false })
+  love.filesystem.write(settingsPath, settingsContents)
+end
 
 local settingsCard = ui.card:extend({
   color = colors.card,
@@ -41,13 +65,13 @@ local settingsSpacer = ui.spacer:extend({
 local backgroundMusic = settingsBoxCard:extend({
   text = 'Background music',
   refresh = function (self)
-    self.isOn = audioEngine.getMusicIsOn()
+    settings.musicIsOn = audioEngine.getMusicIsOn()
   end,
   clicked = function (self)
-    audioEngine.setMusicIsOn(not self.isOn)
+    audioEngine.setMusicIsOn(not settings.musicIsOn)
   end,
   getBoxValue = function (self)
-    if self.isOn then
+    if settings.musicIsOn then
       return 'On'
     else
       return 'Off'
@@ -58,13 +82,13 @@ local backgroundMusic = settingsBoxCard:extend({
 local fullscreen = settingsBoxCard:extend({
   text = 'Fullscreen',
   refresh = function (self)
-    self.isFullscreen = love.window.getFullscreen()
+    settings.isFullscreen = love.window.getFullscreen()
   end,
   clicked = function (self)
-    love.window.setFullscreen(not self.isFullscreen)
+    love.window.setFullscreen(not settings.isFullscreen)
   end,
   getBoxValue = function (self)
-    if self.isFullscreen then
+    if settings.isFullscreen then
       return 'On'
     else
       return 'Off'
@@ -76,6 +100,13 @@ local back = settingsCard:extend({
   text = 'Back',
   clicked = function (self)
     screen:showNext()
+  end,
+})
+
+local exit = settingsCard:extend({
+  text = 'Exit',
+  clicked = function (self)
+    love.event.quit()
   end,
 })
 
@@ -108,6 +139,7 @@ screen = ui.screen:extend({
       fullscreen,
       settingsSpacer:extend(),
       back,
+      exit,
       settingsSpacer:extend(),
       version,
     }
@@ -141,5 +173,7 @@ screen = ui.screen:extend({
 })
 
 return {
+  load = load,
+  save = save,
   screen = screen,
 }
