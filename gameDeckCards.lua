@@ -3,6 +3,7 @@ local gameDeckBasics = require('gameDeckBasics')
 local ui = require('ui')
 
 local deckCard = gameDeckBasics.deckCard
+local discardPile = gameDeckBasics.discardPile
 local drawPile = gameDeckBasics.drawPile
 local hand = gameDeckBasics.hand
 local hope = gameDeckBasics.hope
@@ -44,7 +45,16 @@ local visionOfHope = hopeFeeling:extend({
   buyCost = 4,
 })
 
-local itGetsBetter = deckCard:extend({
+local mindsetCard = deckCard:extend({
+  isMindset = true,
+  play = function (self, pay)
+    self:tryMoveToMindset(function ()
+      pay()
+    end)
+  end,
+})
+
+local itGetsBetter = mindsetCard:extend({
   text = 'It gets better',
   description =
     'Continual source of hope.\n'
@@ -53,11 +63,6 @@ local itGetsBetter = deckCard:extend({
   buyCost = 2,
   playCost = 2,
   activateCost = 0,
-  play = function (self, pay)
-    self:tryMoveToMindset(function ()
-      pay()
-    end)
-  end,
   activate = function (self, pay)
     hope:add(2)
     self.delay = true
@@ -65,7 +70,7 @@ local itGetsBetter = deckCard:extend({
   end,
 })
 
-local knowledgeIsPower = deckCard:extend({
+local knowledgeIsPower = mindsetCard:extend({
   text = 'Knowledge is power',
   description =
     'Continual source of\n'
@@ -75,11 +80,6 @@ local knowledgeIsPower = deckCard:extend({
   buyCost = 2,
   playCost = 2,
   activateCost = 0,
-  play = function (self, pay)
-    self:tryMoveToMindset(function ()
-      pay()
-    end)
-  end,
   activate = function (self, pay)
     hand:tryDiscardToMax(2, self, function ()
       drawPile:drawMany(2)
@@ -97,6 +97,7 @@ local ennui = deckCard:extend({
     .. 'Cannot be played.',
   playCost = math.huge,
   buyCost = math.huge,
+  animationSpeed = 0.5,
   getBoxValue = function (self)
     return '∞'
   end,
@@ -104,7 +105,6 @@ local ennui = deckCard:extend({
 
 local ennuiLibraryCard = libraryCard:make(ennui)
 ennuiLibraryCard.getBoxValue = ennui.getBoxValue
-ennuiLibraryCard.animationDuration = gameUi.styledCardParticle.duration * 2
 
 local curiosity = deckCard:extend({
   play = function (self, pay)
@@ -139,7 +139,7 @@ local intenseCuriosity = curiosity:extend({
   playCost = 3,
 })
 
-local letItGo = deckCard:extend({
+local letItGo = mindsetCard:extend({
   text = 'Let it go',
   description =
     'Be present. Let go. Play\n'
@@ -150,11 +150,6 @@ local letItGo = deckCard:extend({
   buyCost = 1,
   playCost = 1,
   activateCost = 0,
-  play = function (self, pay)
-    self:tryMoveToMindset(function ()
-      pay()
-    end)
-  end,
   activate = function (self, pay)
     ui.targeting:set({
       source = self,

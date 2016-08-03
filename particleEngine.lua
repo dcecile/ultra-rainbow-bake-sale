@@ -80,7 +80,7 @@ local function essPath(maxRadius)
     local delta = target - origin
     local radius = math.min(maxRadius, math.min(math.abs(delta.y), math.abs(delta.x)) / 2)
     local straight = vec2(delta.x, 0):unit():scale(math.abs(delta.x) / 2 - radius)
-    local direction = vec2(delta.x, 0):unit() + vec2(0, delta.y):unit()
+    local direction = delta:sign()
     local arc = direction:scale(radius)
     local arc0Start = origin + straight
     local line1Start = arc0Start + arc
@@ -99,7 +99,7 @@ end
 local function seePath(radius, directionX)
   return function (origin, target)
     local delta = target - origin
-    local direction = vec2(directionX, 0):unit() + vec2(0, delta.y):unit()
+    local direction = vec2(directionX, delta.y):sign()
     local straight = vec2(0, direction.y):scale(math.abs(delta.y) - 2 * radius)
     local line0Start = origin + direction:scale(radius)
     local arc1Start = line0Start + straight
@@ -163,8 +163,15 @@ local function reset()
 end
 
 local function add(particle)
-  particle:init()
-  table.insert(active, particle)
+  if particle.previousParticle then
+    particle.previousParticle.next = function ()
+      particle.previousParticle = nil
+      add(particle)
+    end
+  else
+    particle:init()
+    table.insert(active, particle)
+  end
 end
 
 local function update(time)

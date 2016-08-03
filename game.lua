@@ -241,17 +241,11 @@ screen = ui.screen:extend({
   start = function (self)
     particleEngine.reset()
     discardPile.cards = {
-      gameDeckCards.glimmerOfHope:extend(),
-      gameDeckCards.glimmerOfHope:extend(),
-      gameDeckCards.glimmerOfHope:extend(),
-      gameDeckCards.glimmerOfHope:extend(),
-      gameDeckCards.glimmerOfHope:extend(),
-      gameDeckCards.letItGo:extend(),
-      gameDeckCards.letItGo:extend(),
-      gameDeckCards.letItGo:extend(),
-      gameDeckCards.letItGo:extend(),
-      gameDeckCards.letItGo:extend(),
     }
+    for i = 1, 5 do
+      gameDeckCards.glimmerOfHope:extend():moveToDiscard({ skipParticle = true })
+      gameDeckCards.letItGo:extend():moveToDiscard({ skipParticle = true })
+    end
     drawPile.cards = {}
     hand.cards = {}
     mindset.cards = {}

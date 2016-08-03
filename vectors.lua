@@ -35,9 +35,22 @@ function vec3_metatable.__index.length(a)
   return math.sqrt(a.x * a.x + a.y * a.y + a.z * a.z)
 end
 
-function vec3_metatable.__index.unit(a, b)
+function vec3_metatable.__index.unit(a)
   local length = a:length()
   return a:scale(1 / length)
+end
+
+function vec3_metatable.__index.sign(a)
+  local function sign(value)
+    if value >= 0 then
+      return 1
+    elseif value < 0 then
+      return -1
+    else
+      return 0
+    end
+  end
+  return vec3(sign(a.x), sign(a.y), sign(a.z))
 end
 
 function vec3_metatable.__index.dot(a, b)

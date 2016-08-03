@@ -15,7 +15,21 @@ local method = {
 }
 setmetatable(method, method)
 
+local function defaultOptions(override, default)
+  if override and override.__index then
+    defaultOptions(override.__index, default)
+    return override
+  else
+    override = override or {}
+    default = default or {}
+    override.__index = default
+    setmetatable(override, override)
+    return override
+  end
+end
+
 return {
   sum = sum,
   method = method,
+  defaultOptions = defaultOptions,
 }

@@ -4,7 +4,11 @@ local gameUi = require('gameUi')
 local ui = require('ui')
 local utils = require('utils')
 
+local discardPile = gameDeckBasics.discardPile
+local drawPile = gameDeckBasics.drawPile
+local hand = gameDeckBasics.hand
 local hope = gameDeckBasics.hope
+local mindset = gameDeckBasics.mindset
 
 local batch = gameUi.styledColumn:extend({
   activeTimer = nil,
@@ -87,28 +91,26 @@ local playerCard = gameUi.styledBoxCard:extend({
     ui.targeting:set({
       source = self,
       isTargetable = function (card)
-        return card.runCost and hope.value >= card.runCost
+        return self:isSecretTargetable(card)
+          or card.runCost and hope.value >= card.runCost
       end,
       target = function (card)
-        hope:pay(card.runCost)
-        card:run()
-        self.value = self.value + 1
-        self.isBusy = true
-        ui.targeting:reset()
+        if self:isSecretTargetable(card) then
+          self:secretTarget(card)
+          self.isBusy = true
+          ui.targeting:reset()
+        else
+          hope:pay(card.runCost)
+          card:run()
+          self.value = self.value + 1
+          self.isBusy = true
+          ui.targeting:reset()
+        end
       end,
     })
   end,
   isClickable = function (self)
-    if not self.isBusy then
-      for i, batch in ipairs(kitchen.cards) do
-        for j, action in ipairs(batch.active.cards) do
-          if hope.value >= action.runCost then
-            return true
-          end
-        end
-      end
-    end
-    return false
+    return not self.isBusy
   end,
 })
 
@@ -120,7 +122,17 @@ local morgan = playerCard:extend({
     .. 'him gay, but he’s more\n'
     .. 'worried about how other\n'
     .. 'kids are affected. Best\n'
-    .. 'friend of Alex.',
+    .. 'friend of Alex.\n'
+    .. '(Secret ability is acquiring\n'
+    .. 'new cards.)',
+  isSecretTargetable = function (self, card)
+    return #hand.cards < 5
+      and card.isBuyable and card:isBuyable()
+  end,
+  secretTarget = function (self, card)
+    hope:pay(card.card.buyCost)
+    card:takeToHand()
+  end,
 })
 
 local alex = playerCard:extend({
@@ -130,7 +142,35 @@ local alex = playerCard:extend({
     .. 'insolent. Bullies call her\n'
     .. 'gay, and it reminds her to\n'
     .. 'stay proud and pissed off.\n'
-    .. 'Best friend of Morgan.',
+    .. 'Best friend of Morgan.\n'
+    .. '(Secret ability is rallying\n'
+    .. 'mindsets.)',
+  isSecretTargetable = function (self, card)
+    return #hand.cards < 5 and #mindset.cards < 5
+      and card.column == mindset
+  end,
+  secretTarget = function (self, card)
+    local function findIn(location, condition)
+      for i, search in ipairs(location.cards) do
+        if condition(search) then
+          return search
+        end
+      end
+      return nil
+    end
+    local function find(condition)
+      return findIn(hand, condition)
+        or findIn(drawPile, condition)
+        or findIn(discardPile, condition)
+    end
+    local newMindset =
+      find(function (search) return search.text == card.text end)
+      or find(function (search) return search.isMindset end)
+    if newMindset then
+      newMindset:moveToMindset()
+    end
+    drawPile:drawMany(1)
+  end,
 })
 
 local cupcakes = gameUi.styledBoxCard:extend({

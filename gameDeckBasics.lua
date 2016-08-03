@@ -2,6 +2,7 @@ local colors = require('colors')
 local gameUi = require('gameUi')
 local particleEngine = require('particleEngine')
 local ui = require('ui')
+local utils = require('utils')
 
 local discardPile = gameUi.styledPile:extend({
   text = 'Discard pile',
@@ -32,7 +33,7 @@ local drawPile = gameUi.styledPile:extend({
         self.cards[1]:moveToHand()
       elseif #discardPile.cards > 0 then
         while #discardPile.cards > 0 do
-          discardPile.cards[1]:moveToDraw()
+          discardPile.cards[1]:moveToDraw({ skipParticle = true })
         end
         self:shuffle()
         self.cards[1]:moveToHand()
@@ -136,31 +137,26 @@ local libraryHeading = gameUi.styledHeading:extend({
 })
 
 local libraryCard = gameUi.styledBoxCard:extend({
-  take = function (self, count)
-    local previousParticle = nil
-    for i = 1, count do
-      local newCard = self.card:extend()
-      discardPile:insert(newCard)
-      local currentParticle = gameUi.styledCardParticle:extend({
-        origin = self:getLeftCenter(gameUi.styledCardParticle.size / 2),
-        target = discardPile:getRightCenter(gameUi.styledCardParticle.size / 2),
-        duration = self.animationDuration,
-        path = particleEngine.essPath(gameUi.pathRadius),
-      })
-      if not previousParticle then
-        particleEngine.add(currentParticle)
-      else
-        previousParticle.next = function ()
-          particleEngine.add(currentParticle)
-        end
-      end
-      previousParticle = currentParticle
+  take = function (self, count, previousParticle)
+    local newCard = self.card:extend()
+    local currentParticle
+    newCard:moveToDiscard({
+      previousParticle = previousParticle,
+      setParticle = function (particle)
+        currentParticle = particle
+      end,
+    })
+    if count > 1 then
+      self:take(count - 1, currentParticle)
     end
   end,
+  takeToHand = function (self)
+    local newCard = self.card:extend()
+    newCard:moveToHand()
+  end,
   clicked = function (self)
-    hope:tryPay(self.card.buyCost, function ()
-      self:take(1)
-    end)
+    hope:pay(self.card.buyCost)
+    self:take(1)
   end,
   make = function (self, card)
     return self:extend({
@@ -177,8 +173,14 @@ local libraryCard = gameUi.styledBoxCard:extend({
       self.boxColors = colors.hopeDisabled
       self.textColor = colors.disabledText
     end
+    self.card.left = self.left
+    self.card.top = self.top
+    self.card:refresh()
   end,
   isClickable = function (self)
+    return self:isBuyable()
+  end,
+  isBuyable = function (self)
     return hope.value >= self.card.buyCost
   end,
   getBoxColors = function (self)
@@ -190,7 +192,8 @@ local libraryCard = gameUi.styledBoxCard:extend({
 })
 
 local deckCard = gameUi.styledBoxCard:extend({
-  column = discardPile,
+  column = nil,
+  animationSpeed = 1,
   clicked = function (self)
     local cost = self.cost
     if self:isClickable() then
@@ -204,54 +207,84 @@ local deckCard = gameUi.styledBoxCard:extend({
       and not self.delay
       and hope.value >= self.cost
   end,
-  moveToDraw = function (self)
-    self.column:remove(self)
-    drawPile:insert(self)
-    self.column = drawPile
+  animateMoveTo = function (self, destination, particleOptions)
+    local function getLeftRightParticleCenter()
+      return self:getLeftRightCenter(gameUi.styledCardParticle.size / 2)
+    end
+
+    local originLeft, originRight = getLeftRightParticleCenter()
+    destination:insert(self)
+    local targetLeft, targetRight = getLeftRightParticleCenter()
+
+    local origin
+    local target
+    local path
+
+    if originLeft.x > targetRight.x then
+      origin = originLeft
+      target = targetRight
+      path = particleEngine.essPath(gameUi.pathRadius)
+    elseif originLeft.y < targetRight.y then
+      origin = originLeft
+      target = targetLeft
+      path = particleEngine.seePath(gameUi.pathRadius, -1)
+    else
+      origin = originRight
+      target = targetRight
+      path = particleEngine.seePath(gameUi.pathRadius, 1)
+    end
+
+    local particle = gameUi.styledCardParticle:extend({
+      origin = origin,
+      target = target,
+      path = path,
+      duration = gameUi.styledCardParticle.duration / self.animationSpeed,
+      previousParticle = particleOptions.previousParticle,
+    })
+
+    particleEngine.add(particle)
+    if particleOptions.setParticle then
+      particleOptions.setParticle(particle)
+    end
+  end,
+  moveTo = function (self, destination, particleOptions)
+    particleOptions = utils.defaultOptions(particleOptions)
+    if self.column then
+      self.column:remove(self)
+    end
+    if not particleOptions.skipParticle then
+      self:animateMoveTo(destination, particleOptions)
+    else
+      destination:insert(self)
+    end
+    self.column = destination
+  end,
+  moveToDraw = function (self, particleOptions)
+    self:moveTo(drawPile, particleOptions)
     self.action = nil
     self.cost = nil
     self.delay = false
   end,
-  moveToHand = function (self)
-    self.column:remove(self)
-    hand:insert(self)
-    particleEngine.add(gameUi.styledCardParticle:extend({
-      origin = drawPile:getLeftCenter(gameUi.styledCardParticle.size / 2),
-      target = self:getLeftCenter(gameUi.styledCardParticle.size / 2),
-      path = particleEngine.seePath(gameUi.pathRadius, -1),
-    }))
-    self.column = hand
+  moveToHand = function (self, particleOptions)
+    self:moveTo(hand, skipParticle)
     self.action = self.play
     self.cost = self.playCost
     self.delay = false
   end,
-  tryMoveToMindset = function (self, block)
+  moveToMindset = function (self, particleOptions)
+    self:moveTo(mindset, particleOptions)
+    self.action = self.activate
+    self.cost = self.activateCost
+    self.delay = true
+  end,
+  tryMoveToMindset = function (self, block, particleOptions)
     mindset:tryDiscardToMax(1, self, function ()
-      local origin = self:getLeftCenter(gameUi.styledCardParticle.size / 2)
-      self.column:remove(self)
-      mindset:insert(self)
-      local target = self:getLeftCenter(gameUi.styledCardParticle.size / 2)
-      particleEngine.add(gameUi.styledCardParticle:extend({
-        origin = origin,
-        target = target,
-        path = particleEngine.seePath(gameUi.pathRadius, -1),
-      }))
-      self.column = mindset
-      self.action = self.activate
-      self.cost = self.activateCost
-      self.delay = true
+      self:moveToMindset(particleOptions)
       block()
     end)
   end,
-  moveToDiscard = function (self)
-    particleEngine.add(gameUi.styledCardParticle:extend({
-      origin = self:getRightCenter(gameUi.styledCardParticle.size / 2),
-      target = discardPile:getRightCenter(gameUi.styledCardParticle.size / 2),
-      path = particleEngine.seePath(gameUi.pathRadius, 1),
-    }))
-    self.column:remove(self)
-    discardPile:insert(self)
-    self.column = discardPile
+  moveToDiscard = function (self, particleOptions)
+    self:moveTo(discardPile, particleOptions)
     self.action = nil
     self.cost = nil
     self.delay = false

@@ -57,6 +57,13 @@ local styledPile = styledBoxCard:extend({
   getBoxValue = function (self)
     return #self.cards
   end,
+  refresh = function (self)
+    for i, card in ipairs(self.cards) do
+      card.left = self.left
+      card.top = self.top
+      card:refresh()
+    end
+  end,
 })
 
 return {

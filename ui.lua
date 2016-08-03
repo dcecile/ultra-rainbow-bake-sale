@@ -125,6 +125,9 @@ local rectangle = proto.object:extend({
       self.left + self.width - margin,
       self.top + self.height / 2)
   end,
+  getLeftRightCenter = function (self, margin)
+    return self:getLeftCenter(margin), self:getRightCenter(margin)
+  end,
 })
 
 local spacer = rectangle:extend({

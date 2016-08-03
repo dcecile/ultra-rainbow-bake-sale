@@ -1,5 +1,4 @@
 Proper title screen
-Character idle actions
 
 Slack time indicator
 Following tasks indicator
