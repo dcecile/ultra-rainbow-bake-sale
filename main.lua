@@ -33,12 +33,13 @@ function love.load()
 
   audioEngine.setMusicIsOn(settings.musicIsOn)
 
-  titleScreen.screen:show()
   creditsScreen.screen.next = titleScreen.screen
 
   if debugMode.isActive then
     game.screen:show()
     game.screen:start()
+  else
+    titleScreen.screen:show()
   end
 end
 

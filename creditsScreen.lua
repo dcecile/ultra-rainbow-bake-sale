@@ -1,4 +1,5 @@
 local colors = require('colors')
+local rainbowStripes = require('rainbowStripes')
 local rectangleEngine = require('rectangleEngine')
 local resolutionEngine = require('resolutionEngine')
 local textEngine = require('textEngine')
@@ -7,9 +8,9 @@ local ui = require('ui')
 local screen
 
 local creditsCard = ui.card:extend({
-  color = colors.textBox,
-  borderColor = colors.inverseText,
-  textColor = colors.inverseText,
+  color = colors.inverseText,
+  borderColor = colors.text,
+  textColor = colors.text,
   width = 300,
   height = 50,
   margin = { 13, 12 },
@@ -31,9 +32,10 @@ local exit = creditsCard:extend({
 })
 
 screen = ui.screen:extend({
-  backgroundColor = colors.darkBackground,
+  backgroundColor = colors.inverseText,
   buttons = ui.column:extend({
-    top = 320,
+    left = 250,
+    top = 430,
     margin = 30,
     cards = { newGame, exit }
   }),
@@ -48,7 +50,6 @@ screen = ui.screen:extend({
     local mouseX, mouseY = resolutionEngine.getUnscaledMousePosition()
     ui.cursor:clear()
     local width, height = resolutionEngine.getUnscaledDimensions()
-    self.buttons.left = width / 2 - creditsCard.width / 2
     self.buttons:refresh()
     self.buttons:checkHover(mouseX, mouseY, function (card)
       if card:isClickable() then
@@ -57,7 +58,10 @@ screen = ui.screen:extend({
     end)
   end,
   paint = function (self)
-    textEngine.paint(colors.inverseText, 'big', self.credits, 20, 20)
+    local width, height = resolutionEngine.getUnscaledDimensions()
+    rainbowStripes.stripes:paint()
+    rectangleEngine.paint(colors.inverseText, self.buttons.left - 50, 0, width, height)
+    textEngine.paint(colors.text, 'big', self.credits, self.buttons.left, 150)
     self.buttons:paint()
   end,
   mousepressed = function (self, x, y, button, istouch)

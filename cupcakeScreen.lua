@@ -1,26 +1,28 @@
 local colors = require('colors')
 local currentScreen = require('currentScreen')
+local rainbowStripes = require('rainbowStripes')
 local rectangleEngine = require('rectangleEngine')
 local resolutionEngine = require('resolutionEngine')
 local ui = require('ui')
 
 local scaleF = resolutionEngine.scaleFloat
 
-local function paintCupcake(x, y)
+local function paintCupcake(colors, x, y)
   love.graphics.push()
-  love.graphics.translate(x, y)
+  love.graphics.scale(scaleF(1), scaleF(1))
+  love.graphics.translate(x - 415, y - 165)
 
-  love.graphics.setColor({ 252, 255, 174 })
+  love.graphics.setColor(colors.foil)
   love.graphics.polygon('fill',
     430, 235, 420, 202,
     510, 202, 500, 235)
 
-  love.graphics.setColor({ 215, 211, 127 })
+  love.graphics.setColor(colors.cake)
   love.graphics.polygon('fill',
     422, 202, 422, 198,
     508, 198, 508, 202)
 
-  love.graphics.setColor({ 182, 252, 255 })
+  love.graphics.setColor(colors.icing)
   love.graphics.polygon('fill',
     415, 198, 415, 185,
     515, 185, 515, 198)
@@ -31,7 +33,7 @@ local function paintCupcake(x, y)
     441, 174, 441, 165,
     489, 165, 489, 174)
 
-  love.graphics.setColor({ 133, 223, 223 })
+  love.graphics.setColor(colors.icingHighlight)
   love.graphics.polygon('fill',
     425, 198,
     515, 190, 515, 198)
@@ -42,7 +44,7 @@ local function paintCupcake(x, y)
     451, 174,
     489, 170, 489, 174)
 
-  love.graphics.setColor({ 255, 255, 255 })
+  love.graphics.setColor(colors.foilHighlight)
   love.graphics.polygon('fill',
     425, 202, 430, 202,
     434, 230)
@@ -68,9 +70,18 @@ local function paintCupcake(x, y)
   love.graphics.pop()
 end
 
+local cupcakeColors = {
+  foil = { 252, 255, 174 },
+  foilHighlight = { 255, 255, 255 },
+  cake = { 215, 211, 127 },
+  icing = { 182, 252, 255 },
+  icingHighlight = { 133, 223, 223 },
+}
+
 local function paintStar(color, x, y, angle)
   love.graphics.push()
   love.graphics.setColor(color)
+  love.graphics.scale(scaleF(1), scaleF(1))
   love.graphics.translate(x, y)
   love.graphics.rotate(angle)
   local tip = 30
@@ -91,9 +102,11 @@ local function paintStar(color, x, y, angle)
 end
 
 local screen = ui.screen:extend({
-  backgroundColor = colors.lightBackground,
+  backgroundColor = colors.inverseText,
   paint = function (self)
     ui.cursor:clickable()
+
+    rainbowStripes.stripes:paint()
 
     local screenWidth, screenHeight = resolutionEngine.getUnscaledDimensions()
     rectangleEngine.paint(
@@ -103,15 +116,15 @@ local screen = ui.screen:extend({
     local cupcakeHeight = 235 - 165
     local marginX = 30
     local marginY = 30
-    local cupcakeX = -415 + screenWidth / 2 - (cupcakeWidth * 4 + marginX * 3) / 2
-    local cupcakeY = -165 + screenHeight / 2 - (cupcakeHeight * 3 + marginY * 2) / 2
+    local cupcakeX = screenWidth / 2 - (cupcakeWidth * 4 + marginX * 3) / 2
+    local cupcakeY = screenHeight / 2 - (cupcakeHeight * 3 + marginY * 2) / 2
 
     love.graphics.origin()
-    love.graphics.scale(scaleF(1), scaleF(1))
 
     for y = 0, 2 do
       for x = 0, 3 do
         paintCupcake(
+          cupcakeColors,
           cupcakeX + x * (cupcakeWidth + marginX),
           cupcakeY + y * (cupcakeHeight + marginY))
       end
@@ -119,33 +132,33 @@ local screen = ui.screen:extend({
 
     paintStar(
       { 255, 190, 137 },
-      415 + cupcakeX + 30,
-      165 + cupcakeY - 60,
+      cupcakeX + 30,
+      cupcakeY - 60,
       math.pi * (0 / 6 - 1 / 8))
     paintStar(
       { 254, 255, 137 },
-      415 + cupcakeX + 500,
-      165 + cupcakeY - 90,
+      cupcakeX + 500,
+      cupcakeY - 90,
       math.pi * (1 / 6 - 1 / 8))
     paintStar(
       { 144, 255, 137 },
-      415 + cupcakeX + 610,
-      165 + cupcakeY + 30,
+      cupcakeX + 610,
+      cupcakeY + 30,
       math.pi * (2 / 6 - 1 / 8))
     paintStar(
       { 137, 181, 255 },
-      415 + cupcakeX + 530,
-      165 + cupcakeY + 300,
+      cupcakeX + 530,
+      cupcakeY + 300,
       math.pi * (3 / 6 - 1 / 8))
     paintStar(
       { 255, 137, 255 },
-      415 + cupcakeX + 50,
-      165 + cupcakeY + 330,
+      cupcakeX + 50,
+      cupcakeY + 330,
       math.pi * (4 / 6 - 1 / 8))
     paintStar(
-      { 255, 137, 137 },
-      415 + cupcakeX - 100,
-      165 + cupcakeY + 150,
+      { 255, 127, 127 },
+      cupcakeX - 100,
+      cupcakeY + 150,
       math.pi * (5 / 6 - 1 / 8))
   end,
   show = function (self)
@@ -158,5 +171,7 @@ local screen = ui.screen:extend({
 })
 
 return {
-  screen = screen
+  paintCupcake = paintCupcake,
+  paintStar = paintStar,
+  screen = screen,
 }

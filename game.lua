@@ -6,6 +6,7 @@ local gameDeckCards = require('gameDeckCards')
 local gameKitchenBasics = require('gameKitchenBasics')
 local gameUi = require('gameUi')
 local particleEngine = require('particleEngine')
+local rainbowStripes = require('rainbowStripes')
 local rectangleEngine = require('rectangleEngine')
 local resolutionEngine = require('resolutionEngine')
 local settingsScreen = require('settingsScreen')
@@ -222,6 +223,7 @@ screen = ui.screen:extend({
     end
   end,
   paint = function (self)
+    rainbowStripes.stripes:paintDiagonal()
     particleEngine.paint()
     for i, shape in ipairs(self.shapes) do
       shape:paint()
@@ -239,7 +241,6 @@ screen = ui.screen:extend({
     ui.targeting.continue = false
   end,
   start = function (self)
-    particleEngine.reset()
     discardPile.cards = {
     }
     for i = 1, 5 do
@@ -266,6 +267,10 @@ screen = ui.screen:extend({
     mainColumn:refresh()
     drawPile:shuffle()
     startTurn()
+  end,
+  showNext = function (self, ...)
+    particleEngine.reset()
+    ui.screen.showNext(self, ...)
   end,
 })
 

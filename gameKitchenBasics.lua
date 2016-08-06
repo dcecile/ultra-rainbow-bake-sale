@@ -52,7 +52,7 @@ local kitchen = gameUi.styledColumn:extend({
   tick = function (self)
     local removals = {}
     local function remove(i)
-      table.insert(removals, i, 1)
+      table.insert(removals, 1, i)
     end
     for i, batch in ipairs(self.cards) do
       batch:tick(function () remove(i) end)

@@ -17,8 +17,8 @@ end
 local function refresh()
   local newScaling
   local width, height = love.graphics.getDimensions()
-  width = math.max(64, width)
-  height = math.max(64, height)
+  width = math.max(16, width)
+  height = math.max(16, height)
   if width / height > nominalWidth / nominalHeight then
     newScaling = height / nominalHeight
   else

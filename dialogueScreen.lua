@@ -1,4 +1,5 @@
 local colors = require('colors')
+local rainbowStripes = require('rainbowStripes')
 local rectangleEngine = require('rectangleEngine')
 local resolutionEngine = require('resolutionEngine')
 local textEngine = require('textEngine')
@@ -26,8 +27,10 @@ local function paintLines(color, lines)
 end
 
 local screen = ui.screen:extend({
+  backgroundColor = colors.inverseText,
   paint = function (self)
     ui.cursor:clickable()
+    rainbowStripes.stripes:paint()
     local width, height = resolutionEngine.getUnscaledDimensions()
     rectangleEngine.paint(
       colors.textBox, 100, 100, width - 200, height - 200)

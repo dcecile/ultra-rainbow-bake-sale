@@ -1,7 +1,9 @@
 local proto = require('proto')
 local rectangleEngine = require('rectangleEngine')
+local resolutionEngine = require('resolutionEngine')
 local vectors = require('vectors')
 
+local scaleF = resolutionEngine.scaleFloat
 local vec2 = vectors.vec2
 
 local active = {}
@@ -111,16 +113,14 @@ local function seePath(radius, directionX)
   end
 end
 
-local cardParticle = proto.object:extend({
+local baseParticle = proto.object:extend({
   origin = nil,
   target = nil,
   duration = nil,
-  color = nil,
-  size = nil,
-  path = nil,
   next = nil,
+  easing = inOutQuad,
   init = function (self)
-    self.segments = self.path(self.origin, self.target)
+    self.segments = self.path(self.origin, self.target, self.intermediate)
     self.totalLength = 0
     for i, segment in ipairs(self.segments) do
       self.totalLength = self.totalLength + segment.length
@@ -133,11 +133,11 @@ local cardParticle = proto.object:extend({
     if self.currentTime >= self.duration then
       remove()
       if self.next then
-        self.next()
+        self:next()
       end
       return
     end
-    local currentLength = self.totalLength * inOutQuad(self.currentTime / self.duration)
+    local currentLength = self.totalLength * self.easing(self.currentTime / self.duration)
     for i, segment in ipairs(self.segments) do
       if currentLength <= segment.length + 1e-5 then
         self.position = segment:getProgress(currentLength)
@@ -148,6 +148,12 @@ local cardParticle = proto.object:extend({
     end
     error('segment not found')
   end,
+})
+
+local cardParticle = baseParticle:extend({
+  color = nil,
+  size = nil,
+  path = nil,
   paint = function (self)
     rectangleEngine.paint(
       self.color,
@@ -158,13 +164,63 @@ local cardParticle = proto.object:extend({
   end,
 })
 
+local lineParticle = baseParticle:extend({
+  intermediate = {},
+  path = function (origin, target, intermediate)
+    local segments = {}
+    for i, next in ipairs(intermediate) do
+      table.insert(segments, lineSegment:make(origin, next))
+      origin = next
+    end
+    table.insert(segments, lineSegment:make(origin, target))
+    return segments
+  end,
+})
+
+local shineParticle = lineParticle:extend({
+  color = nil,
+  width = nil,
+  height = nil,
+  rotation = nil,
+  paint = function (self)
+    love.graphics.push()
+    love.graphics.scale(scaleF(1), scaleF(1))
+    love.graphics.translate(self.position.x, self.position.y)
+    love.graphics.rotate(self.rotation)
+    love.graphics.setColor(self.color)
+    love.graphics.rectangle(
+      'fill',
+      -self.width / 2,
+      -self.height / 2,
+      self.width,
+      self.height)
+    love.graphics.pop()
+  end,
+})
+
+local delayParticle = lineParticle:extend({
+  origin = vec2(0, 0),
+  target = vec2(1, 1),
+  paint = function (self)
+  end,
+})
+
+local linearGradientParticle = lineParticle:extend({
+  easing = linear,
+  paint = function (self)
+  end,
+  getColor = function (self)
+    return { self.position.x, self.position.y, self.position.z }
+  end,
+})
+
 local function reset()
   active = {}
 end
 
 local function add(particle)
   if particle.previousParticle then
-    particle.previousParticle.next = function ()
+    particle.previousParticle.next = function (self)
       particle.previousParticle = nil
       add(particle)
     end
@@ -177,7 +233,7 @@ end
 local function update(time)
   local removals = {}
   local function remove(i)
-    table.insert(removals, i, 1)
+    table.insert(removals, 1, i)
   end
   for i, particle in ipairs(active) do
     particle:update(time, function () remove(i) end)
@@ -199,6 +255,14 @@ return {
   update = update,
   paint = paint,
   cardParticle = cardParticle,
+  lineParticle = lineParticle,
+  shineParticle = shineParticle,
+  delayParticle = delayParticle,
+  linearGradientParticle = linearGradientParticle,
   essPath = essPath,
   seePath = seePath,
+  linear = linear,
+  inQuad = inQuad,
+  outQuad = outQuad,
+  inOutQuad = inOutQuad,
 }

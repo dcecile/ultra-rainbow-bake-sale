@@ -6,7 +6,6 @@ local textEngine = require('textEngine')
 local ui = require('ui')
 
 local screen = dialogueScreen.screen:extend({
-  backgroundColor = colors.darkBackground,
   lines = {
     { 'Alex', 'Who’s idea was this anyways?' },
     { 'Morgan', 'Come on, love will always conquer hatred.' },

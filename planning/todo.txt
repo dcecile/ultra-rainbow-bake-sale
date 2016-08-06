@@ -1,5 +1,4 @@
-Proper title screen
-
+Quasi-parallel cleanup tasks (i.e. task delays)
 Slack time indicator
 Following tasks indicator
 Fix decorate with icing display glitch

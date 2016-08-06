@@ -6,21 +6,25 @@ local fontCache = {}
 
 local textObjectCache = {}
 
+local function loadFont(name, size)
+  return love.graphics.newFont(name, math.max(1, scaleR(size)))
+end
+
 local fontLoader = {
   small = function ()
-    return love.graphics.newFont('RobotoCondensed-Light.ttf', scaleR(18))
+    return loadFont('RobotoCondensed-Light.ttf', 18)
   end,
   big = function ()
-    return love.graphics.newFont('RobotoCondensed-Light.ttf', scaleR(26))
+    return loadFont('RobotoCondensed-Light.ttf', 26)
   end,
   bold = function ()
-    return love.graphics.newFont('RobotoCondensed-Regular.ttf', scaleR(26))
+    return loadFont('RobotoCondensed-Regular.ttf', 26)
   end,
   header = function ()
-    return love.graphics.newFont('RobotoCondensed-Regular.ttf', scaleR(36))
+    return loadFont('RobotoCondensed-Regular.ttf', 36)
   end,
   title = function ()
-    return love.graphics.newFont('RobotoCondensed-Regular.ttf', scaleR(48))
+    return loadFont('RobotoCondensed-Regular.ttf', 96)
   end,
 }
 

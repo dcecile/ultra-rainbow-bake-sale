@@ -13,6 +13,23 @@ local function paintPadded(color, left, top, width, height, padding)
     scaleR(top + height) - scaleR(top) + padding * 2)
 end
 
+local function paintRounded(color, left, top, width, height)
+  paintPadded(color, left, top, width, height, 0)
+  local radius = (scaleR(top + height) - scaleR(top)) / 2
+  love.graphics.circle(
+    'fill',
+    scaleR(left),
+    scaleR(top) + radius,
+    radius,
+    30)
+  love.graphics.circle(
+    'fill',
+    scaleR(left + width),
+    scaleR(top) + radius,
+    radius,
+    30)
+end
+
 local function paint(color, left, top, width, height)
   paintPadded(color, left, top, width, height, 0)
 end
@@ -20,4 +37,5 @@ end
 return {
   paint = paint,
   paintPadded = paintPadded,
+  paintRounded = paintRounded,
 }

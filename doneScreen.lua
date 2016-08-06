@@ -7,7 +7,6 @@ local textEngine = require('textEngine')
 local ui = require('ui')
 
 local screen = dialogueScreen.screen:extend({
-  backgroundColor = colors.lightBackground,
   next = creditsScreen.screen,
   show = function (self, totalCupcakes, totalCleanupCost)
     local cleanupText = ''
