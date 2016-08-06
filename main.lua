@@ -16,17 +16,20 @@ function love.load()
   love.filesystem.setIdentity('ultra_rainbow_bake_sale')
   local settings = settingsScreen.load()
 
-  local width, height = 1185, 1050
+  local nominalWidth, nominalHeight = 1185, 1050
+  local desktopWidth, desktopHeight = love.window.getDesktopDimensions()
+  local windowHeight = desktopHeight * 0.7
+  local windowWidth = nominalWidth * windowHeight / nominalHeight
   love.window.setTitle('Ultra Rainbow Bake Sale')
   love.window.setMode(
-    width,
-    height,
+    math.floor(windowWidth),
+    math.floor(windowHeight),
     {
       resizable = true,
       msaa = 8,
       fullscreen = settings.isFullscreen,
     })
-  resolutionEngine.setNominal(width, height)
+  resolutionEngine.setNominal(nominalWidth, nominalHeight)
   resolutionEngine.setOnChanged(function ()
     textEngine.reset()
   end)
