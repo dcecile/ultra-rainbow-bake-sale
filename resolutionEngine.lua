@@ -6,6 +6,7 @@ local unscaledHeight
 local onChanged
 
 local function setNominal(width, height)
+  width, height = width, height
   nominalWidth = width
   nominalHeight = height
 end
@@ -14,11 +15,8 @@ local function setOnChanged(callback)
   onChanged = callback
 end
 
-local function refresh()
+local function setResolution(width, height)
   local newScaling
-  local width, height = love.graphics.getDimensions()
-  width = math.max(16, width)
-  height = math.max(16, height)
   if width / height > nominalWidth / nominalHeight then
     newScaling = height / nominalHeight
   else
@@ -30,6 +28,13 @@ local function refresh()
   end
   unscaledWidth = width / scaling
   unscaledHeight = height / scaling
+end
+
+local function refresh()
+  local width, height = love.graphics.getDimensions()
+  width = math.max(16, width)
+  height = math.max(16, height)
+  setResolution(width, height)
 end
 
 local function getUnscaledDimensions()
@@ -61,6 +66,7 @@ end
 return {
   setNominal = setNominal,
   setOnChanged = setOnChanged,
+  setResolution = setResolution,
   refresh = refresh,
   getUnscaledDimensions = getUnscaledDimensions,
   getUnscaledMousePosition = getUnscaledMousePosition,

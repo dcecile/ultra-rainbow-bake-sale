@@ -16,7 +16,7 @@ function love.load()
   love.filesystem.setIdentity('ultra_rainbow_bake_sale')
   local settings = settingsScreen.load()
 
-  local nominalWidth, nominalHeight = 1185, 1050
+  local nominalWidth, nominalHeight = 1160, 1069
   local desktopWidth, desktopHeight = love.window.getDesktopDimensions()
   local windowHeight = desktopHeight * 0.7
   local windowWidth = nominalWidth * windowHeight / nominalHeight
@@ -46,10 +46,26 @@ function love.load()
   end
 end
 
+function takeScreenshot(width, height)
+  resolutionEngine.setResolution(width, height)
+  local canvas = love.graphics.newCanvas(width, height, normal, 8)
+  love.graphics.setCanvas(canvas)
+  love.graphics.clear(currentScreen.get().backgroundColor)
+  currentScreen.get():update(0)
+  currentScreen.get():paint()
+  love.graphics.setCanvas()
+  canvas:newImageData():encode('png', 'shot.png')
+  print('Saved screenshot')
+end
+
 function love.keypressed(key, isrepeat)
   if debugMode.isActive then
     if key == ' ' or key == 'return' then
       love.event.quit()
+    elseif key == 's' then
+      takeScreenshot(315, 250)
+    elseif key == 'd' then
+      takeScreenshot(933, 860)
     end
   end
 end

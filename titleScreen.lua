@@ -52,10 +52,10 @@ local titleText = proto.object:extend({
   end,
   paint = function (self)
     textEngine.paintTextObject(
-        rainbowGradient:getColor(),
-        self.textObject,
-        self.left,
-        self.top)
+      rainbowGradient:getColor(),
+      self.textObject,
+      self.left,
+      self.top)
   end,
 })
 
