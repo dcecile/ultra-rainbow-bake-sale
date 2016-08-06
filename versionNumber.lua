@@ -3,7 +3,7 @@ local debugMode = require('debugMode')
 local number
 
 if debugMode.isActive then
-  local sourceDirectory = love.filesystem.getRealDirectory('.')
+  local sourceDirectory = love.filesystem.getRealDirectory('versionNumber.py')
   local pythonCommand = sourceDirectory .. '/versionNumber.py'
   local pythonFile = io.popen(pythonCommand)
   number = pythonFile:read()
