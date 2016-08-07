@@ -28,7 +28,6 @@ local function setMusicIsOn(on)
     musicVolume = 0
   end
   if music then
-    print('setMusicIsOn', musicVolume)
     music:setVolume(musicVolume)
   end
 end

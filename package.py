@@ -56,13 +56,13 @@ def writeZippedFiles(destintationZipFile, sourceZipFile, pattern):
       sourceZipFile.read(zippedFileName))
 
 def writeLoveMultiZipFile(basename):
-  filename = '{0}-multi.zip'.format(basename)
+  filename = '{0}_multi.zip'.format(basename)
   with openCompressedZip(filename) as gameZipFile:
     writeLocalFiles(gameZipFile, '', '*.love', '*.txt')
   print('Done {0}'.format(filename))
 
 def writeLoveWin64ZipFile(basename):
-  filename = '{0}-win64.zip'.format(basename)
+  filename = '{0}_win64.zip'.format(basename)
   with openCompressedZip(filename) as gameZipFile:
     with ZipFile('love-win64.zip') as loveZipFile:
       gameZipFile.writestr(
@@ -73,7 +73,7 @@ def writeLoveWin64ZipFile(basename):
   print('Done {0}'.format(filename))
 
 version = versionNumber.getVersionNumber()
-writeLoveFile('ultra_rainbow_bake_sale', version)
-writeLoveMultiZipFile('ultra_rainbow_bake_sale')
-writeLoveWin64ZipFile('ultra_rainbow_bake_sale')
+writeLoveFile('ultra-rainbow-bake-sale', version)
+writeLoveMultiZipFile('ultra-rainbow-bake-sale')
+writeLoveWin64ZipFile('ultra-rainbow-bake-sale')
 print('Built {0}'.format(version))

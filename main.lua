@@ -13,7 +13,7 @@ local unscaleF = resolutionEngine.unscaleFloat
 local quitShortcut = false
 
 function love.load()
-  love.filesystem.setIdentity('ultra_rainbow_bake_sale')
+  love.filesystem.setIdentity('ultra-rainbow-bake-sale')
   local settings = settingsScreen.load()
 
   local nominalWidth, nominalHeight = 1160, 1069
