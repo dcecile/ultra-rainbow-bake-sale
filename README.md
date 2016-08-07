@@ -5,9 +5,18 @@ What started originally as an idea for a [Sugar, Sweets, & Jam!](https://itch.io
 submission is now a playable alpha, with cards to acquire and use, and a baking system
 to manage.
 
+This GitHub page is for if you want to read or modify the game's source code, or take
+a look at the the [open issues](https://github.com/dcecile/ultra-rainbow-bake-sale/issues).
+If you just want to play the game, head over to its
+[Itch.io homepage](https://dcecile.itch.io/ultra-rainbow-bake-sale), where it's available
+for download on a pay-what-you-want basis.
+
 ## Getting started
 
 ### Prerequisites
+
+This game's Git repository includes submodules. When first cloning the repository, use the
+`--recursive` flag to make sure the submodules get initialized and updated properly.
 
 The development environment requires Git, Python 3, and LÖVE.
 
