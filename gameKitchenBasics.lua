@@ -1,5 +1,6 @@
 local colors = require('colors')
 local gameDeckBasics = require('gameDeckBasics')
+local gameDeckCards = require('gameDeckCards')
 local gameUi = require('gameUi')
 local ui = require('ui')
 local utils = require('utils')
@@ -9,6 +10,7 @@ local drawPile = gameDeckBasics.drawPile
 local hand = gameDeckBasics.hand
 local hope = gameDeckBasics.hope
 local mindset = gameDeckBasics.mindset
+local libraryColumn = gameDeckCards.libraryColumn
 
 local batch = gameUi.styledColumn:extend({
   activeTimer = nil,
@@ -78,7 +80,7 @@ local playerCard = gameUi.styledBoxCard:extend({
     end
   end,
   getBoxColors = function (self)
-    if self.isBusy then
+    if not self:isClickable() then
       return colors.playerDisabled
     else
       return colors.player
@@ -110,7 +112,25 @@ local playerCard = gameUi.styledBoxCard:extend({
     })
   end,
   isClickable = function (self)
-    return not self.isBusy
+    if not self.isBusy then
+      for i, batch in ipairs(kitchen.cards) do
+        for j, action in ipairs(batch.active.cards) do
+          if hope.value >= action.runCost then
+            return true
+          end
+        end
+      end
+      for i, card in ipairs(libraryColumn.cards) do
+        if self:isSecretTargetable(card) then
+          return true
+        end
+      end
+      for i, card in ipairs(mindset.cards) do
+        if self:isSecretTargetable(card) then
+          return true
+        end
+      end
+    end
   end,
 })
 

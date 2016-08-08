@@ -1,3 +1,13 @@
+Integrate refinery publishing
+Create 'src' directory
+Slower card particles
+Escape to open settings
+Make targetable cards more obvious
+Add friend note about "needs hope for baking"
+Add description text for box values
+Add icons for box values
+Animate playable cards
+Optional in-game tips
 Quasi-parallel cleanup tasks (i.e. task delays)
 Slack time indicator
 Following tasks indicator
