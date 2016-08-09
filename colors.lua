@@ -6,7 +6,7 @@ return {
   inverseText = { 255, 255, 255 },
   textBox = { 80, 0, 80 },
   card = { 255, 255, 255 },
-  cardParticle = { 255, 255, 255, 130 },
+  cardParticle = { 255, 255, 255, 180 },
   highlightColor = { 202, 255, 204 },
   selectedBorderColor = { 200, 200, 200 },
   spacer = { 150, 150, 150 },

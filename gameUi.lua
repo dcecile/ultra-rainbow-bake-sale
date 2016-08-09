@@ -9,7 +9,7 @@ local styledColumn = ui.column:extend({
 local columnSpacing = 70
 
 local styledCardParticle = particleEngine.cardParticle:extend({
-  duration = 500,
+  duration = 800,
   color = colors.cardParticle,
   size = 16,
 })

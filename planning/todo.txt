@@ -1,6 +1,5 @@
 Integrate refinery publishing
 Create 'src' directory
-Slower card particles
 Make targetable cards more obvious
 Add description text for box values
 Add icons for box values
