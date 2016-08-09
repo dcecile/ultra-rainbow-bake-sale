@@ -15,8 +15,8 @@ local ui = require('ui')
 
 local alex = gameKitchenBasics.alex
 local cupcakes = gameKitchenBasics.cupcakes
-local discardPile = gameDeckBasics.discardPile
-local drawPile = gameDeckBasics.drawPile
+local deck = gameDeckBasics.deck
+local discard = gameDeckBasics.discard
 local hand = gameDeckBasics.hand
 local hope = gameDeckBasics.hope
 local kitchen = gameKitchenBasics.kitchen
@@ -31,7 +31,7 @@ local function startTurn()
   while #hand.cards > 0 do
     hand.cards[1]:moveToDiscard()
   end
-  drawPile:drawMany(5)
+  deck:drawMany(5)
   for i, card in ipairs(mindset.cards) do
     card.delay = false
   end
@@ -57,9 +57,9 @@ local endTurn = gameUi.styledBoxCard:extend({
           kitchen:getCleanupCost()))
     else
       if self.turnCounter >= 9 then
-        gameDeckCards.ennuiLibraryCard:take(1)
+        gameDeckCards.ennuiInspirationCard:take(1)
       else
-        gameDeckCards.ennuiLibraryCard:take(2)
+        gameDeckCards.ennuiInspirationCard:take(2)
       end
       self.turnCounter = self.turnCounter - 1
       startTurn()
@@ -169,8 +169,8 @@ local mainColumn = gameUi.styledColumn:extend({
   left = bakingColumn.left + gameUi.styledBoxCard.width + gameUi.columnSpacing,
   top = 60,
   cards = {
-    discardPile,
-    drawPile,
+    discard,
+    deck,
     gameUi.styledSpacer:extend(),
     gameDeckBasics.handHeading,
     hand,
@@ -183,14 +183,14 @@ local mainColumn = gameUi.styledColumn:extend({
   }
 })
 
-local libraryColumn = gameUi.styledColumn:extend({
+local inspirationColumn = gameUi.styledColumn:extend({
   left = mainColumn.left + gameUi.styledBoxCard.width + gameUi.columnSpacing,
   top = 60,
   cards = {
     hope,
     gameUi.styledSpacer:extend(),
-    gameDeckBasics.libraryHeading,
-    gameDeckCards.libraryColumn,
+    gameDeckBasics.inspirationHeading,
+    gameDeckCards.inspiration,
     gameUi.styledSpacerSymmetrical:extend(),
     infoBox,
     gameUi.styledSpacerSymmetrical:extend(),
@@ -201,7 +201,7 @@ local libraryColumn = gameUi.styledColumn:extend({
 screen = ui.screen:extend({
   backgroundColor = colors.lightBackground,
   next = doneScreen.screen,
-  shapes = { bakingColumn, mainColumn, libraryColumn },
+  shapes = { bakingColumn, mainColumn, inspirationColumn },
   update = function (self, time)
     particleEngine.update(time)
     self:refresh()
@@ -241,13 +241,12 @@ screen = ui.screen:extend({
     ui.targeting.continue = false
   end,
   start = function (self)
-    discardPile.cards = {
-    }
+    discard.cards = {}
     for i = 1, 5 do
       gameDeckCards.glimmerOfHope:extend():moveToDiscard({ skipParticle = true })
       gameDeckCards.letItGo:extend():moveToDiscard({ skipParticle = true })
     end
-    drawPile.cards = {}
+    deck.cards = {}
     hand.cards = {}
     mindset.cards = {}
     kitchen.cards = {}
@@ -265,7 +264,6 @@ screen = ui.screen:extend({
     print(string.format('Seeding game with %f', seed))
     math.randomseed(seed)
     mainColumn:refresh()
-    drawPile:shuffle()
     startTurn()
   end,
   showNext = function (self, ...)

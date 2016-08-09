@@ -2,12 +2,12 @@ local gameUi = require('gameUi')
 local gameDeckBasics = require('gameDeckBasics')
 local ui = require('ui')
 
+local deck = gameDeckBasics.deck
 local deckCard = gameDeckBasics.deckCard
-local discardPile = gameDeckBasics.discardPile
-local drawPile = gameDeckBasics.drawPile
+local discard = gameDeckBasics.discard
 local hand = gameDeckBasics.hand
 local hope = gameDeckBasics.hope
-local libraryCard = gameDeckBasics.libraryCard
+local inspirationCard = gameDeckBasics.inspirationCard
 
 local hopeFeeling = deckCard:extend({
   playCost = 0,
@@ -21,27 +21,30 @@ local hopeFeeling = deckCard:extend({
 local glimmerOfHope = hopeFeeling:extend({
   text = 'Glimmer of hope',
   description =
-    'Fundamental source of\n'
-    .. 'hope. Play and discard\n'
-    .. 'to gain 1 hope.',
+    'Baking needs hope, and this\n'
+    .. 'is a fundamental source of\n'
+    .. 'it. Play and discard to gain 1\n'
+    .. 'hope.',
   buyCost = 1,
 })
 
 local feelingOfHope = hopeFeeling:extend({
   text = 'Feeling of hope',
   description =
-    'Fundamental source of\n'
-    .. 'hope. Play and discard\n'
-    .. 'to gain 2 hope.',
+    'Baking needs hope, and this\n'
+    .. 'is a fundamental source of\n'
+    .. 'it. Play and discard to gain 2\n'
+    .. 'hope.',
   buyCost = 2,
 })
 
 local visionOfHope = hopeFeeling:extend({
   text = 'Vision of hope',
   description =
-    'Fundamental source of\n'
-    .. 'hope. Play and discard\n'
-    .. 'to gain 4 hope.',
+    'Baking needs hope, and this\n'
+    .. 'is a fundamental source of\n'
+    .. 'it. Play and discard to gain 4\n'
+    .. 'hope.',
   buyCost = 4,
 })
 
@@ -74,15 +77,15 @@ local knowledgeIsPower = mindsetCard:extend({
   text = 'Knowledge is power',
   description =
     'Continual source of\n'
-    .. 'inspiration. Play this\n'
-    .. 'mindset, then activate to\n'
-    .. 'draw 2 cards.',
+    .. 'strength. Play this mindset,\n'
+    .. 'then activate to draw 2\n'
+    .. 'cards.',
   buyCost = 2,
   playCost = 2,
   activateCost = 0,
   activate = function (self, pay)
     hand:tryDiscardToMax(2, self, function ()
-      drawPile:drawMany(2)
+      deck:drawMany(2)
       self.delay = true
       pay()
     end)
@@ -103,17 +106,17 @@ local ennui = deckCard:extend({
   end,
 })
 
-local ennuiLibraryCard = libraryCard:make(ennui)
-ennuiLibraryCard.getBoxValue = ennui.getBoxValue
+local ennuiInspirationCard = inspirationCard:make(ennui)
+ennuiInspirationCard.getBoxValue = ennui.getBoxValue
 
 local curiosity = deckCard:extend({
   play = function (self, pay)
     local cardsToDraw = math.min(
       self.playCost + 1,
-      #drawPile.cards + #discardPile.cards)
+      #deck.cards + #discard.cards)
     hand:tryDiscardToMax(cardsToDraw - 1, self, function ()
       self:moveToDiscard()
-      drawPile:drawMany(cardsToDraw)
+      deck:drawMany(cardsToDraw)
       pay()
     end)
   end,
@@ -144,9 +147,10 @@ local letItGo = mindsetCard:extend({
   description =
     'Be present. Let go. Play\n'
     .. 'this mindset, then activate\n'
-    .. 'and discard. Return one\n'
-    .. 'card to the library, and\n'
-    .. 'draw a new card.',
+    .. 'and discard. Remove one\n'
+    .. 'card-in-hand completely\n'
+    .. 'from play, and draw a new\n'
+    .. 'one.',
   buyCost = 1,
   playCost = 1,
   activateCost = 0,
@@ -158,7 +162,7 @@ local letItGo = mindsetCard:extend({
       end,
       target = function (card)
         card:remove()
-        drawPile:drawMany(1)
+        deck:drawMany(1)
         self:moveToDiscard()
         ui.targeting:reset()
         pay()
@@ -167,21 +171,21 @@ local letItGo = mindsetCard:extend({
   end,
 })
 
-local libraryColumn = gameUi.styledColumn:extend({
+local inspiration = gameUi.styledColumn:extend({
   cards = {
-    ennuiLibraryCard,
-    libraryCard:make(feelingOfHope),
-    libraryCard:make(visionOfHope),
-    libraryCard:make(mildCuriosity),
-    libraryCard:make(intenseCuriosity),
-    libraryCard:make(itGetsBetter),
-    libraryCard:make(knowledgeIsPower),
+    ennuiInspirationCard,
+    inspirationCard:make(feelingOfHope),
+    inspirationCard:make(visionOfHope),
+    inspirationCard:make(mildCuriosity),
+    inspirationCard:make(intenseCuriosity),
+    inspirationCard:make(itGetsBetter),
+    inspirationCard:make(knowledgeIsPower),
   }
 })
 
 return {
   glimmerOfHope = glimmerOfHope,
   letItGo = letItGo,
-  ennuiLibraryCard = ennuiLibraryCard,
-  libraryColumn = libraryColumn,
+  ennuiInspirationCard = ennuiInspirationCard,
+  inspiration = inspiration,
 }

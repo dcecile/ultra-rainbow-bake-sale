@@ -18,12 +18,13 @@ local function make(number, precedingBatch)
   newBatch.cards = {
     gameUi.styledSpacer:extend(),
     gameUi.styledHeading:extend({
-      text = 'Batch #' .. newBatch.number,
+      text = 'Cupcakes batch #' .. newBatch.number,
       description =
-        'Follow the recipe. Some\n'
-        .. 'tasks are harder than\n'
-        .. 'others. Morgan and Alex\n'
-        .. 'are keen to start.',
+        'Follow the recipe by com-\n'
+        .. 'pleting all of these tasks.\n'
+        .. 'Some tasks are harder and\n'
+        .. 'need more hope than\n'
+        .. 'others.',
     }),
     newBatch.active,
   }
@@ -41,17 +42,22 @@ local function make(number, precedingBatch)
   local measureDry = add({
     text = 'Measure dry',
     description =
-      'Measure out the flours,\n'
-      .. 'sugars, salts, spices, and\n'
-      .. 'rising agents.',
+      'Morgan and Alex are keen\n'
+      .. 'to start, but this task needs\n'
+      .. '1 hope. Measure out the\n'
+      .. 'flours, sugars, salts, spices,\n'
+      .. 'and rising agents.',
     runCost = 1,
     depends = {},
   })
   local measureWet = add({
     text = 'Measure wet',
     description =
-      'Measure out the milk and\n'
-      .. 'oil. Don’t forget vanilla.',
+      'Morgan and Alex are keen\n'
+      .. 'to start, but this task needs\n'
+      .. '1 hope. Measure out the\n'
+      .. 'milk and oil. Don’t forget\n'
+      .. 'vanilla.',
     runCost = 1,
     depends = {},
   })

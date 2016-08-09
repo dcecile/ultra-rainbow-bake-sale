@@ -5,12 +5,12 @@ local gameUi = require('gameUi')
 local ui = require('ui')
 local utils = require('utils')
 
-local discardPile = gameDeckBasics.discardPile
-local drawPile = gameDeckBasics.drawPile
+local deck = gameDeckBasics.deck
+local discard = gameDeckBasics.discard
 local hand = gameDeckBasics.hand
 local hope = gameDeckBasics.hope
+local inspiration = gameDeckCards.inspiration
 local mindset = gameDeckBasics.mindset
-local libraryColumn = gameDeckCards.libraryColumn
 
 local batch = gameUi.styledColumn:extend({
   activeTimer = nil,
@@ -120,7 +120,7 @@ local playerCard = gameUi.styledBoxCard:extend({
           end
         end
       end
-      for i, card in ipairs(libraryColumn.cards) do
+      for i, card in ipairs(inspiration.cards) do
         if self:isSecretTargetable(card) then
           return true
         end
@@ -140,11 +140,10 @@ local morgan = playerCard:extend({
     'Enthusiastic, kind, caring,\n'
     .. 'and sensitive. Bullies call\n'
     .. 'him gay, but he’s more\n'
-    .. 'worried about how other\n'
-    .. 'kids are affected. Best\n'
-    .. 'friend of Alex.\n'
-    .. '(Secret ability is acquiring\n'
-    .. 'new cards.)',
+    .. 'worried about other kids.\n'
+    .. 'Best friend of Alex.\n'
+    .. '(Secret ability is finding\n'
+    .. 'inspiration.)',
   isSecretTargetable = function (self, card)
     return #hand.cards < 5
       and card.isBuyable and card:isBuyable()
@@ -180,8 +179,8 @@ local alex = playerCard:extend({
     end
     local function find(condition)
       return findIn(hand, condition)
-        or findIn(drawPile, condition)
-        or findIn(discardPile, condition)
+        or findIn(deck, condition)
+        or findIn(discard, condition)
     end
     local newMindset =
       find(function (search) return search.text == card.text end)
@@ -189,16 +188,17 @@ local alex = playerCard:extend({
     if newMindset then
       newMindset:moveToMindset()
     end
-    drawPile:drawMany(1)
+    deck:drawMany(1)
   end,
 })
 
 local cupcakes = gameUi.styledBoxCard:extend({
-  text = 'Total cupcakes',
+  text = 'Cupcakes baked',
   description =
     'The current recipe is for\n'
-    .. 'cupcakes. Bake and\n'
-    .. 'decorate, to prepare for\n'
+    .. 'cupcakes. Use lots and lots\n'
+    .. 'of hope to bake and\n'
+    .. 'decorate, in preparation of\n'
     .. 'tomorrow’s bake sale.',
   value = 0,
   textColor = colors.cupcakes.foreground,
@@ -212,11 +212,12 @@ local cupcakes = gameUi.styledBoxCard:extend({
 })
 
 local pendingCleanup = gameUi.styledBoxCard:extend({
-  text = 'Pending cleanup',
+  text = 'Cleanup pending',
   description =
-    'Don’t forget to clean up\n'
-    .. 'the kitchen. During baking\n'
-    .. 'is less stressful than after\n'
+    'Don’t forget to save some\n'
+    .. 'hope for cleaning up the\n'
+    .. 'kitchen. During baking is\n'
+    .. 'less stressful than after\n'
     .. 'baking.',
   textColor = colors.cupcakes.foreground,
   borderColor = colors.cupcakes.foreground,

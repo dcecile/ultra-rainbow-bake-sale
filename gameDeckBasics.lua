@@ -4,15 +4,15 @@ local particleEngine = require('particleEngine')
 local ui = require('ui')
 local utils = require('utils')
 
-local discardPile = gameUi.styledPile:extend({
-  text = 'Discard pile',
+local discard = gameUi.styledPile:extend({
+  text = 'Discard',
   description =
-    'Used and acquired cards\n'
+    'Used and newly found cards\n'
     .. 'go here.',
 })
 
-local drawPile = gameUi.styledPile:extend({
-  text = 'Draw pile',
+local deck = gameUi.styledPile:extend({
+  text = 'Deck',
   description =
     'These are the cards that\n'
     .. 'will be drawn next. When\n'
@@ -31,9 +31,9 @@ local drawPile = gameUi.styledPile:extend({
     for i = 1, drawCards do
       if #self.cards > 0 then
         self.cards[1]:moveToHand()
-      elseif #discardPile.cards > 0 then
-        while #discardPile.cards > 0 do
-          discardPile.cards[1]:moveToDraw({ skipParticle = true })
+      elseif #discard.cards > 0 then
+        while #discard.cards > 0 do
+          discard.cards[1]:moveToDraw({ skipParticle = true })
         end
         self:shuffle()
         self.cards[1]:moveToHand()
@@ -128,15 +128,16 @@ local hope = gameUi.styledBoxCard:extend({
   end,
 })
 
-local libraryHeading = gameUi.styledHeading:extend({
-  text = 'Library',
+local inspirationHeading = gameUi.styledHeading:extend({
+  text = 'Inspiration',
   description =
-    'New techniques to learn\n'
-    .. 'and try out. Click a card\n'
-    .. 'to pay hope and aquire.',
+    'New techniques to find,\n'
+    .. 'learn, and try out. Pay the\n'
+    .. 'hope cost of a card to\n'
+    .. 'gain a copy.',
 })
 
-local libraryCard = gameUi.styledBoxCard:extend({
+local inspirationCard = gameUi.styledBoxCard:extend({
   take = function (self, count, previousParticle)
     local newCard = self.card:extend()
     local currentParticle
@@ -260,7 +261,7 @@ local deckCard = gameUi.styledBoxCard:extend({
     self.column = destination
   end,
   moveToDraw = function (self, particleOptions)
-    self:moveTo(drawPile, particleOptions)
+    self:moveTo(deck, particleOptions)
     self.action = nil
     self.cost = nil
     self.delay = false
@@ -284,7 +285,7 @@ local deckCard = gameUi.styledBoxCard:extend({
     end)
   end,
   moveToDiscard = function (self, particleOptions)
-    self:moveTo(discardPile, particleOptions)
+    self:moveTo(discard, particleOptions)
     self.action = nil
     self.cost = nil
     self.delay = false
@@ -310,14 +311,14 @@ local deckCard = gameUi.styledBoxCard:extend({
 })
 
 return {
-  discardPile = discardPile,
-  drawPile = drawPile,
+  discard = discard,
+  deck = deck,
   handHeading = handHeading,
   hand = hand,
   mindsetHeading = mindsetHeading,
   mindset = mindset,
   hope = hope,
-  libraryHeading = libraryHeading,
-  libraryCard = libraryCard,
+  inspirationHeading = inspirationHeading,
+  inspirationCard = inspirationCard,
   deckCard = deckCard,
 }
