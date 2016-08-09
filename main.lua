@@ -42,6 +42,7 @@ function love.load()
     game.screen:show()
     game.screen:start()
   else
+    titleScreen.screen:start()
     titleScreen.screen:show()
   end
 end
@@ -59,7 +60,13 @@ function takeScreenshot(width, height)
 end
 
 function love.keypressed(key, isrepeat)
-  if debugMode.isActive then
+  if key == 'escape' then
+    if currentScreen.get() == settingsScreen.screen then
+      settingsScreen.screen:showNext()
+    else
+      settingsScreen.screen:show(currentScreen.get())
+    end
+  elseif debugMode.isActive then
     if key == ' ' or key == 'return' then
       love.event.quit()
     elseif key == 's' then

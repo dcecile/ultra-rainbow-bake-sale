@@ -198,7 +198,7 @@ local screen = ui.screen:extend({
     audioEngine.startMusic()
     self:showNext()
   end,
-  show = function (self)
+  start = function (self)
     local seed = love.timer.getTime()
     print(string.format('Seeding title with %f', seed))
     math.randomseed(seed)
@@ -213,8 +213,6 @@ local screen = ui.screen:extend({
       duration = 200,
     }))
     particleEngine.add(rainbowGradient)
-
-    ui.screen.show(self)
   end,
   showNext = function (self, ...)
     particleEngine.reset()

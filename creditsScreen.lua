@@ -20,6 +20,7 @@ local creditsCard = ui.card:extend({
 local newGame = creditsCard:extend({
   text = 'New game',
   clicked = function (self)
+    screen.next.start()
     screen:showNext()
   end,
 })
