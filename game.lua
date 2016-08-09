@@ -91,7 +91,14 @@ local kitchenMinutes = gameUi.styledBoxCard:extend({
 })
 
 local function hasInfo(card)
-  return card.text and card.description
+  local targetingFailed = false
+  if ui.targeting:isSet() then
+    targetingFailed = not (
+      ui.targeting:isSource(card)
+      or ui.targeting:isSelected(card)
+      or ui.targeting:isTargetable(card))
+  end
+  return not targetingFailed and card.text and card.description
 end
 
 local infoBox = ui.rectangle:extend({
@@ -99,21 +106,14 @@ local infoBox = ui.rectangle:extend({
   body = nil,
   font = 'big',
   borderColor = colors.text,
-  color = colors.lightBackground,
   textColor = colors.text,
   highlightColor = colors.highlightColor,
   margin = gameUi.styledBoxCard.margin,
   width = gameUi.styledBoxCard.width,
   height = 315,
   paint = function (self)
-    if ui.targeting:isSet() and ui.targeting:isSource(self) then
-      rectangleEngine.paintPadded(
-        self.highlightColor, self.left, self.top, self.width, self.height, 3)
-    end
-    rectangleEngine.paintPadded(
+    rectangleEngine.paintBorder(
       self.borderColor, self.left, self.top, self.width, self.height, 1)
-    rectangleEngine.paint(
-      self.color, self.left, self.top, self.width, self.height)
     textEngine.paint(
       self.textColor,
       'bold',
@@ -138,7 +138,7 @@ local infoBox = ui.rectangle:extend({
 })
 
 local settingsButton = ui.card:extend({
-  color = infoBox.color,
+  color = colors.card,
   borderColor = infoBox.borderColor,
   textColor = infoBox.textColor,
   width = infoBox.width,

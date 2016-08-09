@@ -22,7 +22,6 @@ local styledBoxCard = ui.boxCard:extend({
   textColor = colors.text,
   highlightColor = colors.highlightColor,
   selectedBorderColor = colors.selectedBorderColor,
-  untargetableColor = colors.untargetableColor,
   width = 300,
   height = 50,
   margin = { 13, 12 },

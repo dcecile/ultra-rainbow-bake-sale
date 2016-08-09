@@ -9,7 +9,6 @@ return {
   cardParticle = { 255, 255, 255, 130 },
   highlightColor = { 202, 255, 204 },
   selectedBorderColor = { 200, 200, 200 },
-  untargetableColor = { 240, 240, 240 },
   spacer = { 150, 150, 150 },
   heading = { 100, 100, 100 },
   hope = {
@@ -47,5 +46,11 @@ return {
     { 155, 255, 186 },
     { 187, 208, 255 },
     { 242, 157, 255 },
-  }
+  },
+  noActionAlpha = function (color)
+    return { color[1], color[2], color[3], 128 }
+  end,
+  unselectableAlpha = function (color)
+    return { color[1], color[2], color[3], 180 }
+  end,
 }

@@ -1,3 +1,4 @@
+local colors = require('colors')
 local currentScreen = require('currentScreen')
 local proto = require('proto')
 local rectangleEngine = require('rectangleEngine')
@@ -157,10 +158,14 @@ local heading = rectangle:extend({
 
 local card = rectangle:extend({
   paint = function (self)
-    rectangleEngine.paintPadded(
+    local color = self.color
+    if targeting:isSet() then
+      color = colors.unselectableAlpha(color)
+    end
+    rectangleEngine.paintBorder(
       self.borderColor, self.left, self.top, self.width, self.height, 1)
     rectangleEngine.paint(
-      self.color, self.left, self.top, self.width, self.height)
+      color, self.left, self.top, self.width, self.height)
     textEngine.paint(
       self.textColor,
       self.font,
@@ -175,25 +180,33 @@ local boxCard = card:extend({
     local borderColor = self.borderColor
     local color = self.color
     local highlight = false
+    local boxColors = self:getBoxColors()
+    local boxForeground = boxColors.foreground
+    local boxBackground = boxColors.background
 
     if targeting:isSet() then
       if targeting:isSource(self) then
         highlight = true
-        color = self.untargetableColor
+        color = colors.unselectableAlpha(color)
+        boxBackground = colors.unselectableAlpha(boxBackground)
       elseif targeting:isSelected(self) then
         highlight = true
         borderColor = self.selectedBorderColor
       elseif not targeting:isTargetable(self) then
-        color = self.untargetableColor
+        color = colors.unselectableAlpha(color)
+        boxBackground = colors.unselectableAlpha(boxBackground)
       end
+    elseif not self.clicked then
+      color = colors.noActionAlpha(color)
+      boxBackground = colors.noActionAlpha(boxBackground)
     end
 
     if highlight then
-      rectangleEngine.paintPadded(
+      rectangleEngine.paintBorder(
         self.highlightColor, self.left, self.top, self.width, self.height, 3)
     end
 
-    rectangleEngine.paintPadded(
+    rectangleEngine.paintBorder(
       borderColor, self.left, self.top, self.width, self.height, 1)
     rectangleEngine.paint(
       color, self.left, self.top, self.width, self.height)
@@ -205,17 +218,16 @@ local boxCard = card:extend({
       self.left + self.margin[1],
       self.top + self.margin[2])
 
-    local boxColors = self:getBoxColors()
     local boxValue = self:getBoxValue()
     local boxWidth = 50
     local boxLeft = self.left + self.width - boxWidth
     rectangleEngine.paint(
-      boxColors.background, boxLeft, self.top, boxWidth, self.height)
+      boxBackground, boxLeft, self.top, boxWidth, self.height)
     rectangleEngine.paint(
-      boxColors.foreground, boxLeft - unscaleF(1), self.top, unscaleF(1), self.height)
+      boxForeground, boxLeft - unscaleF(1), self.top, unscaleF(1), self.height)
     local boxText = textEngine.getTextObject(self.font, tostring(boxValue))
     textEngine.paintTextObject(
-      boxColors.foreground,
+      boxForeground,
       boxText,
       math.floor(boxLeft + boxWidth / 2 - unscaleF(boxText:getWidth()) / 2),
       self.top + self.margin[2])
