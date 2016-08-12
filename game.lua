@@ -98,30 +98,41 @@ local function hasInfo(card)
       or ui.targeting:isSelected(card)
       or ui.targeting:isTargetable(card))
   end
-  return not targetingFailed and card.text and card.description
+  return not targetingFailed and (card.tip or card.text and card.description)
 end
 
 local infoBox = ui.rectangle:extend({
   title = nil,
   body = nil,
   font = 'big',
-  borderColor = colors.text,
+  color = colors.infoBoxAlpha(colors.card),
+  borderColor = colors.infoBoxAlpha(colors.text),
   textColor = colors.text,
   highlightColor = colors.highlightColor,
   margin = gameUi.styledBoxCard.margin,
   width = gameUi.styledBoxCard.width,
-  height = 315,
+  height = 267,
   paint = function (self)
+    local color = self.color
+    local textColor = self.textColor
+    local borderColor = self.borderColor
+    if self.tip then
+      color = self.tipColor
+      textColor = self.tipTextColor
+      borderColor = self.tipBorderColor
+    end
     rectangleEngine.paintBorder(
-      self.borderColor, self.left, self.top, self.width, self.height, 1)
+      borderColor, self.left, self.top, self.width, self.height, 1)
+    rectangleEngine.paint(
+      color, self.left, self.top, self.width, self.height)
     textEngine.paint(
-      self.textColor,
+      textColor,
       'bold',
       self.title,
       self.left + self.margin[1],
       self.top + self.margin[2])
     textEngine.paint(
-      self.textColor,
+      textColor,
       self.font,
       self.body,
       self.left + self.margin[1],
@@ -130,18 +141,28 @@ local infoBox = ui.rectangle:extend({
   reset = function (self)
     self.title = 'Info box'
     self.body = 'Hover over a card to get\ndetailed info.'
+    self.tip = false
   end,
   set = function (self, card)
-    self.title = card.text
-    self.body = card.description
+    if card.tip then
+      self.tip = true
+      self.title = card.tipText
+      self.body = card.tipDescription
+      self.tipColor = card.color
+      self.tipBorderColor = card.borderColor
+      self.tipTextColor = card.textColor
+    else
+      self.title = card.text
+      self.body = card.description
+    end
   end,
 })
 
 local settingsButton = ui.card:extend({
   color = colors.card,
-  borderColor = infoBox.borderColor,
-  textColor = infoBox.textColor,
-  width = infoBox.width,
+  borderColor = colors.text,
+  textColor = colors.text,
+  width = gameUi.styledBoxCard.width,
   height = gameUi.styledBoxCard.height,
   margin = { 13, 12 },
   font = 'big',
@@ -150,12 +171,62 @@ local settingsButton = ui.card:extend({
   clicked = function (self)
     settingsScreen.screen:show()
   end,
+  refresh = function (self)
+    self.top = kitchenMinutes.top
+    self.left = hope.left
+  end,
+})
+
+local tipBox = ui.card:extend({
+  color = colors.card,
+  borderColor = colors.hope.foreground,
+  textColor = colors.hope.foreground,
+  width = gameUi.styledBoxCard.width,
+  height = gameUi.styledBoxCard.height,
+  margin = { 13, 12 },
+  font = 'big',
+  normalText = 'Need a tip? Check here!',
+  hoverText = 'Click to highlight!',
+  text = nil,
+  tipText = 'Hope comes first',
+  tipDescription =
+    'Morgan and Alex currently\n'
+    .. 'have 0 hope. Play a card\n'
+    .. 'from the hand that gives\n'
+    .. 'hope. Hope is needed for\n'
+    .. 'almost everything: baking,\n'
+    .. 'playing cards, inspiration...',
+  tip = true,
+  clicked = function (self)
+    ui.tipHighlight:set({
+      color = colors.hope.foreground,
+      width = 3,
+      duration = { 200, 4000, 2000 },
+      isHighlighted = function (card)
+        return card.text == 'Glimmer of hope'
+      end,
+    })
+  end,
+  refresh = function (self)
+    self.text = self.normalText
+  end,
+  checkHover = function (self, x, y, block)
+    ui.card.checkHover(self, x, y, function ()
+      if not ui.targeting:isSet() then
+        self.text = self.hoverText
+      end
+      block(self)
+    end)
+  end,
 })
 
 local bakingColumn = gameUi.styledColumn:extend({
   left = 60,
   top = 60,
   cards = {
+    infoBox,
+    tipBox,
+    gameUi.styledSpacerSymmetrical:extend(),
     cupcakes,
     pendingCleanup,
     gameUi.styledSpacerSymmetrical:extend(),
@@ -191,17 +262,13 @@ local inspirationColumn = gameUi.styledColumn:extend({
     gameUi.styledSpacer:extend(),
     gameDeckBasics.inspirationHeading,
     gameDeckCards.inspiration,
-    gameUi.styledSpacerSymmetrical:extend(),
-    infoBox,
-    gameUi.styledSpacerSymmetrical:extend(),
-    settingsButton,
   }
 })
 
 screen = ui.screen:extend({
   backgroundColor = colors.lightBackground,
   next = doneScreen.screen,
-  shapes = { bakingColumn, mainColumn, inspirationColumn },
+  shapes = { bakingColumn, mainColumn, inspirationColumn, settingsButton },
   update = function (self, time)
     particleEngine.update(time)
     self:refresh()
@@ -231,6 +298,7 @@ screen = ui.screen:extend({
   end,
   mousepressed = function (self, x, y, button, istouch)
     self:refresh()
+    ui.tipHighlight:reset()
     local resetTargeting = ui.targeting:isSet()
     for i, shape in ipairs(self.shapes) do
       shape:mousepressed(x, y, button, istouch)

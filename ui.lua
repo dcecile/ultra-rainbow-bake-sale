@@ -1,5 +1,6 @@
 local colors = require('colors')
 local currentScreen = require('currentScreen')
+local particleEngine = require('particleEngine')
 local proto = require('proto')
 local rectangleEngine = require('rectangleEngine')
 local resolutionEngine = require('resolutionEngine')
@@ -81,7 +82,61 @@ local targeting = proto.object:extend({
       end
     end
     return false
-  end
+  end,
+})
+
+local tipHighlight = proto.object:extend({
+  current = nil,
+  particle = nil,
+  alpha = nil,
+  set = function (self, new)
+    self.current = new
+    local fadeOut = particleEngine.fadeOutParticle:extend({
+      duration = self.current.duration[3],
+      next = function (particleSelf)
+        self:reset()
+      end,
+    })
+    local delay = particleEngine.delayParticle:extend({
+      duration = self.current.duration[2],
+      previousParticle = fadeInParticle,
+      next = function (particleSelf)
+        self.particle = fadeOut
+        self.alpha = self.particle.alpha
+        particleEngine.add(self.particle)
+      end,
+    })
+    local fadeIn = particleEngine.fadeInParticle:extend({
+      duration = self.current.duration[1],
+      next = function (particleSelf)
+        self.particle = delay
+        self.alpha = function (particleSelf, color) return color end
+        particleEngine.add(self.particle)
+      end,
+    })
+    self.particle = fadeIn
+    self.alpha = self.particle.alpha
+    particleEngine.add(self.particle)
+  end,
+  reset = function (self)
+    if self.particle then
+      self.particle.next = nil
+    end
+    self.current = nil
+    self.particle = nil
+    self.alpha = nil
+  end,
+  paint = function (self, card)
+    if self.current and self.current.isHighlighted(card) then
+      rectangleEngine.paintBorder(
+        self.alpha(self.particle, self.current.color),
+        card.left,
+        card.top,
+        card.width,
+        card.height,
+        self.current.width)
+    end
+  end,
 })
 
 local rectangle = proto.object:extend({
@@ -231,6 +286,8 @@ local boxCard = card:extend({
       boxText,
       math.floor(boxLeft + boxWidth / 2 - unscaleF(boxText:getWidth()) / 2),
       self.top + self.margin[2])
+
+    tipHighlight:paint(self)
   end,
 })
 
@@ -291,6 +348,7 @@ local screen = proto.object:extend({
 return {
   cursor = cursor,
   targeting = targeting,
+  tipHighlight = tipHighlight,
   rectangle = rectangle,
   card = card,
   boxCard = boxCard,

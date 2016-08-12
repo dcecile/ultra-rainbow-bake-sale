@@ -12,7 +12,7 @@ local function make(number, precedingBatch)
   })
 
   newBatch.active = gameUi.styledColumn:extend({
-    minHeight = gameUi.styledBoxCard.height * 3 + gameUi.styledColumn.margin * 2,
+    minHeight = gameUi.styledBoxCard.height * 2 + gameUi.styledColumn.margin * 1,
     cards = {},
   })
   newBatch.cards = {

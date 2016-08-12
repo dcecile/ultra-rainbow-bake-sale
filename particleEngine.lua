@@ -214,6 +214,26 @@ local linearGradientParticle = lineParticle:extend({
   end,
 })
 
+local fadeParticle = lineParticle:extend({
+  paint = function (self)
+  end,
+  alpha = function (self, color)
+    return { color[1], color[2], color[3], self.position.x }
+  end,
+})
+
+local fadeInParticle = fadeParticle:extend({
+  origin = vec2(0, 0),
+  target = vec2(255, 0),
+  easing = inQuad,
+})
+
+local fadeOutParticle = fadeParticle:extend({
+  origin = vec2(255, 0),
+  target = vec2(0, 0),
+  easing = outQuad,
+})
+
 local function reset()
   active = {}
 end
@@ -259,6 +279,8 @@ return {
   shineParticle = shineParticle,
   delayParticle = delayParticle,
   linearGradientParticle = linearGradientParticle,
+  fadeInParticle = fadeInParticle,
+  fadeOutParticle = fadeOutParticle,
   essPath = essPath,
   seePath = seePath,
   linear = linear,

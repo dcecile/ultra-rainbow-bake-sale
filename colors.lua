@@ -50,6 +50,9 @@ return {
   noActionAlpha = function (color)
     return { color[1], color[2], color[3], 128 }
   end,
+  infoBoxAlpha = function (color)
+    return { color[1], color[2], color[3], 30 }
+  end,
   unselectableAlpha = function (color)
     return { color[1], color[2], color[3], 180 }
   end,
