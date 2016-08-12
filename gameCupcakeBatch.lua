@@ -7,34 +7,33 @@ local cupcakes = gameKitchenBasics.cupcakes
 local kitchenAction = gameKitchenBasics.kitchenAction
 
 local function make(number, precedingBatch)
-  local newBatch = batch:extend({
-    number = number,
-  })
-
-  newBatch.active = gameUi.styledColumn:extend({
-    minHeight = gameUi.styledBoxCard.height * 2 + gameUi.styledColumn.margin * 1,
+  local newBatchActive = batch.active:extend({
     cards = {},
   })
-  newBatch.cards = {
-    gameUi.styledSpacer:extend(),
-    gameUi.styledHeading:extend({
-      text = 'Cupcakes batch #' .. newBatch.number,
-      description =
-        'Follow the recipe by com-\n'
-        .. 'pleting all of these tasks.\n'
-        .. 'Some tasks are harder and\n'
-        .. 'need more hope than\n'
-        .. 'others.',
-    }),
-    newBatch.active,
-  }
-  newBatch.actions = {}
+  local newBatch = batch:extend({
+    number = number,
+    active = newBatchActive,
+    cards = {
+      gameUi.styledSpacer:extend(),
+      gameUi.styledHeading:extend({
+        text = 'Cupcakes batch #' .. number,
+        description =
+          'Follow the recipe by com-\n'
+          .. 'pleting all of these tasks.\n'
+          .. 'Some tasks are harder and\n'
+          .. 'need more hope than\n'
+          .. 'others.',
+      }),
+      newBatchActive,
+    },
+    actions = {},
+  })
 
   local function add(properties)
     local card = kitchenAction:extend(properties)
     card.batch = newBatch
     if not card.isHidden then
-      table.insert(newBatch.actions, card)
+      table.insert(newBatch.actions, 1, card)
     end
     return card
   end
@@ -98,7 +97,7 @@ local function make(number, precedingBatch)
       .. 'problem.',
     runCost = 4,
     cleanupTrigger = mixAll,
-    depends = { cleanCups, pour },
+    depends = { pour },
   })
   local cleanUtensils = add({
     text = 'Clean utensils',
@@ -107,7 +106,7 @@ local function make(number, precedingBatch)
       .. 'there to lend a hand.',
     runCost = 2,
     cleanupTrigger = measureDry,
-    depends = { cleanBowl },
+    depends = { pour },
   })
   local bakeTimer = add({
     text = 'Bake timer',
@@ -158,7 +157,7 @@ local function make(number, precedingBatch)
       .. 'others are funny.',
     runCost = 1,
     cleanupTrigger = takeOut,
-    depends = { cleanUtensils, takeOut },
+    depends = { takeOut },
   })
   local makeIcing = add({
     text = 'Make icing',
@@ -192,7 +191,7 @@ local function make(number, precedingBatch)
       .. 'big series of messes.',
     runCost = 6,
     cleanupTrigger = makeIcing,
-    depends = { cleanSheet, decorate },
+    depends = { decorate },
   })
   function burnt()
     takeOut.isDone = true

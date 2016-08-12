@@ -292,45 +292,59 @@ local boxCard = card:extend({
 })
 
 local column = proto.object:extend({
+  minHeight = 0,
+  maxCards = math.huge,
   refresh = function (self)
     local nextTop = self.top
     for i, card in ipairs(self.cards) do
-      card.left = self.left
-      card.top = nextTop
-      card:refresh()
-      nextTop = nextTop + card.height + self.margin
+      if i <= self.maxCards then
+        card.left = self.left
+        card.top = nextTop
+        card:refresh()
+        nextTop = nextTop + card.height + self.margin
+      end
     end
     self.height = math.max(self.minHeight, nextTop - self.top - self.margin)
   end,
   checkHover = function (self, x, y, block)
     for i, card in ipairs(self.cards) do
-      card:checkHover(x, y, block)
+      if i <= self.maxCards then
+        card:checkHover(x, y, block)
+      end
     end
   end,
   paint = function (self)
     for i, card in ipairs(self.cards) do
-      card:paint()
+      if i <= self.maxCards then
+        card:paint()
+      end
     end
   end,
   mousepressed = function (self, x, y, button, istouch)
     for i, card in ipairs(self.cards) do
-      card:mousepressed(x, y, button, istouch)
+      if i <= self.maxCards then
+        card:mousepressed(x, y, button, istouch)
+      end
     end
   end,
   remove = function (self, card)
     for i, found in ipairs(self.cards) do
       if found == card then
         table.remove(self.cards, i)
+        self:refresh()
         return
       end
     end
     error('remove failed')
   end,
-  insert = function (self, card)
-    table.insert(self.cards, card)
+  insert = function (self, card, i)
+    if i then
+      table.insert(self.cards, i, card)
+    else
+      table.insert(self.cards, card)
+    end
     self:refresh()
   end,
-  minHeight = 0,
 })
 
 local screen = proto.object:extend({

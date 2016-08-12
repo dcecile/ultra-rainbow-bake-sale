@@ -14,6 +14,11 @@ local mindset = gameDeckBasics.mindset
 
 local batch = gameUi.styledColumn:extend({
   activeTimer = nil,
+  active = gameUi.styledColumn:extend({
+    minHeight = gameUi.styledBoxCard.height * 2 + gameUi.styledColumn.margin * 1,
+    maxCards = 2,
+    cards = {},
+  }),
   tick = function (self, remove)
     if self.activeTimer then
       self.activeTimer()
@@ -29,7 +34,11 @@ local batch = gameUi.styledColumn:extend({
           end
         end
         if ready then
-          self.active:insert(action)
+          if action.cleanupTrigger then
+            self.active:insert(action)
+          else
+            self.active:insert(action, 1)
+          end
         else
           table.insert(newActions, action)
         end
