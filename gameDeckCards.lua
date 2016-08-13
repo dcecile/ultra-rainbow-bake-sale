@@ -8,9 +8,11 @@ local discard = gameDeckBasics.discard
 local hand = gameDeckBasics.hand
 local hope = gameDeckBasics.hope
 local inspirationCard = gameDeckBasics.inspirationCard
+local mindset = gameDeckBasics.mindset
 
 local hopeFeeling = deckCard:extend({
   playCost = 0,
+  isHope = true,
   play = function (self, pay)
     hope:add(self.buyCost)
     self:moveToDiscard()
@@ -50,6 +52,9 @@ local visionOfHope = hopeFeeling:extend({
 
 local mindsetCard = deckCard:extend({
   isMindset = true,
+  isSafeMindset = function (self)
+    return false
+  end,
   play = function (self, pay)
     self:tryMoveToMindset(function ()
       pay()
@@ -66,6 +71,10 @@ local itGetsBetter = mindsetCard:extend({
   buyCost = 2,
   playCost = 2,
   activateCost = 0,
+  isHope = true,
+  isSafeMindset = function (self)
+    return true
+  end,
   activate = function (self, pay)
     hope:add(2)
     self.delay = true
@@ -83,6 +92,9 @@ local knowledgeIsPower = mindsetCard:extend({
   buyCost = 2,
   playCost = 2,
   activateCost = 0,
+  isSafeMindset = function (self)
+    return #hand.cards <= 3
+  end,
   activate = function (self, pay)
     hand:tryDiscardToMax(2, self, function ()
       deck:drawMany(2)
@@ -101,6 +113,7 @@ local ennui = deckCard:extend({
   playCost = math.huge,
   buyCost = math.huge,
   animationSpeed = 0.5,
+  isEnnui = true,
   getBoxValue = function (self)
     return '∞'
   end,
@@ -154,6 +167,14 @@ local letItGo = mindsetCard:extend({
   buyCost = 1,
   playCost = 1,
   activateCost = 0,
+  isLetItGo = true,
+  isClickable = function (self)
+    if self.column == mindset then
+      return mindsetCard.isClickable(self) and #hand.cards > 0
+    else
+      return mindsetCard.isClickable(self)
+    end
+  end,
   activate = function (self, pay)
     ui.targeting:set({
       source = self,
@@ -161,6 +182,9 @@ local letItGo = mindsetCard:extend({
         return card.column == hand
       end,
       target = function (card)
+        if card.isEnnui then
+          hand.totalEnnuiRemoved = hand.totalEnnuiRemoved + 1
+        end
         card:remove()
         deck:drawMany(1)
         self:moveToDiscard()

@@ -80,7 +80,8 @@ local kitchen = gameUi.styledColumn:extend({
   end,
 })
 
-local playerCard = gameUi.styledBoxCard:extend({
+local friendCard = gameUi.styledBoxCard:extend({
+  isFriend = true,
   refresh = function (self)
     if self:isClickable() then
       self.textColor = colors.player.foreground
@@ -143,7 +144,7 @@ local playerCard = gameUi.styledBoxCard:extend({
   end,
 })
 
-local morgan = playerCard:extend({
+local morgan = friendCard:extend({
   text = 'Morgan',
   description =
     'Enthusiastic, kind, caring,\n'
@@ -163,7 +164,7 @@ local morgan = playerCard:extend({
   end,
 })
 
-local alex = playerCard:extend({
+local alex = friendCard:extend({
   text = 'Alex',
   description =
     'Strong, brave, caring, and\n'
@@ -243,13 +244,17 @@ local kitchenAction = gameUi.styledBoxCard:extend({
   isHidden = false,
   borderColor = colors.cupcakes.foreground,
   refresh = function (self)
-    if (not morgan.isBusy or not alex.isBusy) and hope.value >= self.runCost then
+    if self:isRunnable() then
       self.boxColors = colors.hope
       self.textColor = colors.cupcakes.foreground
     else
       self.boxColors = colors.hopeDisabled
       self.textColor = colors.disabledText
     end
+  end,
+  isRunnable = function (self)
+    return (not morgan.isBusy or not alex.isBusy)
+      and hope.value >= self.runCost
   end,
   getBoxColors = function (self)
     return self.boxColors
@@ -259,6 +264,7 @@ local kitchenAction = gameUi.styledBoxCard:extend({
   end,
   run = function (self)
     self.isDone = true
+    kitchen.totalTasksCompleted = kitchen.totalTasksCompleted + 1
     if not self.isHidden then
       self.batch.active:remove(self)
     end

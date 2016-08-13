@@ -1,4 +1,4 @@
-object = {}
+local object = {}
 setmetatable(object, object)
 
 function object.extend(self, properties)

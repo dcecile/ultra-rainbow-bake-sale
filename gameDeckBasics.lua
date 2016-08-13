@@ -294,7 +294,7 @@ local deckCard = gameUi.styledBoxCard:extend({
     self.column:remove(self)
   end,
   refresh = function (self)
-    if self.cost and hope.value >= self.cost and not self.delay then
+    if self:isClickable() then
       self.boxColors = colors.hope
       self.textColor = colors.text
     else

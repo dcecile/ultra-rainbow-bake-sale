@@ -11,6 +11,7 @@ local rectangleEngine = require('rectangleEngine')
 local resolutionEngine = require('resolutionEngine')
 local settingsScreen = require('settingsScreen')
 local textEngine = require('textEngine')
+local tipEngine = require('tipEngine')
 local ui = require('ui')
 
 local alex = gameKitchenBasics.alex
@@ -48,6 +49,7 @@ local endTurn = gameUi.styledBoxCard:extend({
     .. 'turn. Cards in hand will be\n'
     .. 'discarded and new ones\n'
     .. 'drawn.',
+  isEndTurn = true,
   clicked = function (self)
     if self.turnCounter == 0 then
       screen:showNext(
@@ -146,8 +148,8 @@ local infoBox = ui.rectangle:extend({
   set = function (self, card)
     if card.tip then
       self.tip = true
-      self.title = card.tipText
-      self.body = card.tipDescription
+      self.title = card.tip.text
+      self.body = card.tip.description
       self.tipColor = card.color
       self.tipBorderColor = card.borderColor
       self.tipTextColor = card.textColor
@@ -188,27 +190,18 @@ local tipBox = ui.card:extend({
   normalText = 'Need a tip? Check here!',
   hoverText = 'Click to highlight!',
   text = nil,
-  tipText = 'Hope comes first',
-  tipDescription =
-    'Morgan and Alex currently\n'
-    .. 'have 0 hope. Play a card\n'
-    .. 'from the hand that gives\n'
-    .. 'hope. Hope is needed for\n'
-    .. 'almost everything: baking,\n'
-    .. 'playing cards, inspiration...',
-  tip = true,
+  tip = nil,
   clicked = function (self)
     ui.tipHighlight:set({
       color = colors.hope.foreground,
       width = 3,
       duration = { 200, 4000, 2000 },
-      isHighlighted = function (card)
-        return card.text == 'Glimmer of hope'
-      end,
+      isHighlighted = self.tip.isHighlighted,
     })
   end,
   refresh = function (self)
     self.text = self.normalText
+    self.tip = tipEngine.getTip()
   end,
   checkHover = function (self, x, y, block)
     ui.card.checkHover(self, x, y, function ()
@@ -316,6 +309,7 @@ screen = ui.screen:extend({
     end
     deck.cards = {}
     hand.cards = {}
+    hand.totalEnnuiRemoved = 0
     mindset.cards = {}
     kitchen.cards = {}
     bakingColumn:refresh()
@@ -323,6 +317,7 @@ screen = ui.screen:extend({
     kitchen:insert(batch1)
     local batch2 = gameCupcakeBatch.make(2, batch1)
     kitchen:insert(batch2)
+    kitchen.totalTasksCompleted = 0
     morgan.value = 0
     alex.value = 0
     cupcakes.value = 0
