@@ -12,11 +12,12 @@ local unscaleF = resolutionEngine.unscaleFloat
 
 local quitShortcut = false
 
+local nominalWidth, nominalHeight = 1160, 1069
+
 function love.load()
   love.filesystem.setIdentity('ultra-rainbow-bake-sale')
   local settings = settingsScreen.load()
 
-  local nominalWidth, nominalHeight = 1160, 1069
   local desktopWidth, desktopHeight = love.window.getDesktopDimensions()
   local windowHeight = desktopHeight * 0.7
   local windowWidth = nominalWidth * windowHeight / nominalHeight
@@ -72,7 +73,10 @@ function love.keypressed(key, isrepeat)
     elseif key == 's' then
       takeScreenshot(315, 250)
     elseif key == 'd' then
-      takeScreenshot(933, 860)
+      local forumWidth = 780
+      takeScreenshot(forumWidth, forumWidth / nominalWidth * nominalHeight)
+    elseif key == 'f' then
+      takeScreenshot(nominalWidth, nominalHeight)
     end
   end
 end
