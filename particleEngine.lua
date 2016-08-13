@@ -148,6 +148,10 @@ local baseParticle = proto.object:extend({
     end
     error('segment not found')
   end,
+  cancel = function (self)
+    self.currentTime = self.duration
+    self.next = nil
+  end,
 })
 
 local cardParticle = baseParticle:extend({
@@ -217,19 +221,19 @@ local linearGradientParticle = lineParticle:extend({
 local fadeParticle = lineParticle:extend({
   paint = function (self)
   end,
-  alpha = function (self, color)
-    return { color[1], color[2], color[3], self.position.x }
+  alpha = function (self, color, maxAlpha)
+    return { color[1], color[2], color[3], self.position.x * maxAlpha }
   end,
 })
 
 local fadeInParticle = fadeParticle:extend({
   origin = vec2(0, 0),
-  target = vec2(255, 0),
+  target = vec2(1, 0),
   easing = inQuad,
 })
 
 local fadeOutParticle = fadeParticle:extend({
-  origin = vec2(255, 0),
+  origin = vec2(1, 0),
   target = vec2(0, 0),
   easing = outQuad,
 })

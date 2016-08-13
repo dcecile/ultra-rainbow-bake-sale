@@ -170,6 +170,7 @@ local settingsButton = ui.card:extend({
   font = 'big',
   text = 'Settings',
   description = 'Configure the program.',
+  isSettings = true,
   clicked = function (self)
     settingsScreen.screen:show()
   end,
@@ -194,6 +195,7 @@ local tipBox = ui.card:extend({
   clicked = function (self)
     ui.tipHighlight:set({
       color = colors.hope.foreground,
+      maxAlpha = 255,
       width = 3,
       duration = { 200, 4000, 2000 },
       isHighlighted = self.tip.isHighlighted,
@@ -291,7 +293,6 @@ screen = ui.screen:extend({
   end,
   mousepressed = function (self, x, y, button, istouch)
     self:refresh()
-    ui.tipHighlight:reset()
     local resetTargeting = ui.targeting:isSet()
     for i, shape in ipairs(self.shapes) do
       shape:mousepressed(x, y, button, istouch)
@@ -322,6 +323,7 @@ screen = ui.screen:extend({
     alex.value = 0
     cupcakes.value = 0
     endTurn.turnCounter = 18
+    ui.noActionTimeout:reset()
 
     local seed = love.timer.getTime()
     print(string.format('Seeding game with %f', seed))

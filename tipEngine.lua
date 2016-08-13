@@ -46,7 +46,7 @@ local expertTip = tip:extend({
     return hand.totalEnnuiRemoved >= 3 and kitchen.totalTasksCompleted >= 7
   end,
   isHighlighted = function (card)
-    return card:isClickable()
+    return card:isClickable() and not card.tip and not card.isSettings
   end,
 })
 

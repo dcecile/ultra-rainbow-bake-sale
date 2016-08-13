@@ -10,6 +10,9 @@ local vectors = require('vectors')
 local vec2 = vectors.vec2
 local unscaleF = resolutionEngine.unscaleFloat
 
+local noActionTimeout
+local tipHighlight
+
 local cursor = proto.object:extend({
   isTargeting = false,
   isClickable = false,
@@ -46,6 +49,7 @@ local targeting = proto.object:extend({
   continue = false,
   set = function (self, new)
     cursor:startTargeting()
+    noActionTimeout:highlight()
     self.current = new
   end,
   isSet = function (self)
@@ -53,15 +57,17 @@ local targeting = proto.object:extend({
   end,
   reset = function (self)
     cursor:stopTargeting()
+    noActionTimeout:reset()
+    tipHighlight:reset()
     self.current = nil
     self.selected = {}
     self.continue = false
   end,
-  isTargetable = function (self, check)
-    return self.current.isTargetable(check)
+  isTargetable = function (self, card)
+    return self.current.isTargetable(card)
   end,
-  target = function (self, check)
-    return self.current.target(check)
+  target = function (self, card)
+    self.current.target(card)
   end,
   toggleSelected = function (self, new)
     for i, old in ipairs(self.selected) do
@@ -85,11 +91,12 @@ local targeting = proto.object:extend({
   end,
 })
 
-local tipHighlight = proto.object:extend({
+tipHighlight = proto.object:extend({
   current = nil,
   particle = nil,
   alpha = nil,
   set = function (self, new)
+    self:reset()
     self.current = new
     local fadeOut = particleEngine.fadeOutParticle:extend({
       duration = self.current.duration[3],
@@ -99,7 +106,6 @@ local tipHighlight = proto.object:extend({
     })
     local delay = particleEngine.delayParticle:extend({
       duration = self.current.duration[2],
-      previousParticle = fadeInParticle,
       next = function (particleSelf)
         self.particle = fadeOut
         self.alpha = self.particle.alpha
@@ -110,7 +116,9 @@ local tipHighlight = proto.object:extend({
       duration = self.current.duration[1],
       next = function (particleSelf)
         self.particle = delay
-        self.alpha = function (particleSelf, color) return color end
+        self.alpha = function (particleSelf, color, maxAlpha)
+          return { color[1], color[2], color[3], maxAlpha }
+        end
         particleEngine.add(self.particle)
       end,
     })
@@ -120,7 +128,7 @@ local tipHighlight = proto.object:extend({
   end,
   reset = function (self)
     if self.particle then
-      self.particle.next = nil
+      self.particle:cancel()
     end
     self.current = nil
     self.particle = nil
@@ -129,13 +137,50 @@ local tipHighlight = proto.object:extend({
   paint = function (self, card)
     if self.current and self.current.isHighlighted(card) then
       rectangleEngine.paintBorder(
-        self.alpha(self.particle, self.current.color),
+        self.alpha(self.particle, self.current.color, self.current.maxAlpha),
         card.left,
         card.top,
         card.width,
         card.height,
         self.current.width)
     end
+  end,
+})
+
+noActionTimeout = proto.object:extend({
+  particle = nil,
+  initialDuration = 10000,
+  repeatDuration = 4000,
+  reset = function (self)
+    self:queue(self.initialDuration)
+  end,
+  queue = function (self, duration)
+    if self.particle then
+      self.particle:cancel()
+    end
+    self.particle = particleEngine.delayParticle:extend({
+      duration = duration,
+      next = function (particleSelf)
+        self:highlight()
+      end,
+    })
+    particleEngine.add(self.particle)
+  end,
+  highlight = function (self)
+    tipHighlight:set({
+      color = colors.hope.foreground,
+      maxAlpha = 220,
+      width = 3,
+      duration = { 500, 1500, 2000 },
+      isHighlighted = function (card)
+        if targeting:isSet() then
+          return targeting:isTargetable(card)
+        else
+          return card:isClickable() and not card.isSettings
+        end
+      end,
+    })
+    self:queue(self.repeatDuration)
   end,
 })
 
@@ -167,6 +212,8 @@ local rectangle = proto.object:extend({
           targeting:target(self)
         end
       elseif self:isClickable() then
+        noActionTimeout:reset()
+        tipHighlight:reset()
         self:clicked()
       end
     end
@@ -227,6 +274,7 @@ local card = rectangle:extend({
       self.text,
       self.left + self.margin[1],
       self.top + self.margin[2])
+    tipHighlight:paint(self)
   end
 })
 
@@ -363,6 +411,7 @@ return {
   cursor = cursor,
   targeting = targeting,
   tipHighlight = tipHighlight,
+  noActionTimeout = noActionTimeout,
   rectangle = rectangle,
   card = card,
   boxCard = boxCard,
