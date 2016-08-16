@@ -41,6 +41,7 @@ local settingsCard = ui.card:extend({
   height = 50,
   margin = { 13, 12 },
   font = 'big',
+  isSettings = true,
 })
 
 local settingsBoxCard = ui.boxCard:extend({
@@ -51,6 +52,7 @@ local settingsBoxCard = ui.boxCard:extend({
   height = settingsCard.height,
   margin = settingsCard.margin,
   font = settingsCard.font,
+  isSettings = true,
   getBoxColors = function (self)
     return colors.cupcakes
   end,
