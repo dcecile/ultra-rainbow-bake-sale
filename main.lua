@@ -1,3 +1,5 @@
+love.filesystem.setRequirePath('?.lua;src/?.lua;lib/?.lua')
+
 local audioEngine = require('audioEngine')
 local creditsScreen = require('creditsScreen')
 local currentScreen = require('currentScreen')

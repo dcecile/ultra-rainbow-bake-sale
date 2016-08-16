@@ -36,6 +36,8 @@ def writeLoveFile(basename, version):
   filename = '{0}.love'.format(basename)
   with openCompressedZip(filename) as gameLoveFile:
     writeLocalFiles(gameLoveFile, '', '*.lua', '*.txt', '*.mp3', '*.ttf')
+    writeLocalFiles(gameLoveFile, 'src/', '*.lua')
+    writeLocalFiles(gameLoveFile, 'lib/', '*.lua')
     writeLocalFiles(gameLoveFile, 'lib/serpent/src/', '*.lua')
     gameLoveFile.writestr(
       'packagedVersionNumber.lua',
