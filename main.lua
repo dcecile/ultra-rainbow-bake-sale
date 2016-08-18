@@ -51,6 +51,11 @@ function love.load()
 end
 
 function takeScreenshot(width, height)
+  local mouseX, mouseY = resolutionEngine.getUnscaledMousePosition()
+  local originalGetUnscaledMousePosition = resolutionEngine.getUnscaledMousePosition
+  resolutionEngine.getUnscaledMousePosition = function ()
+    return mouseX, mouseY
+  end
   resolutionEngine.setResolution(width, height)
   local canvas = love.graphics.newCanvas(width, height, normal, 8)
   love.graphics.setCanvas(canvas)
@@ -58,6 +63,7 @@ function takeScreenshot(width, height)
   currentScreen.get():update(0)
   currentScreen.get():paint()
   love.graphics.setCanvas()
+  resolutionEngine.getUnscaledMousePosition = originalGetUnscaledMousePosition
   canvas:newImageData():encode('png', 'shot.png')
   print('Saved screenshot')
 end
