@@ -313,12 +313,12 @@ screen = ui.screen:extend({
     hand.totalEnnuiRemoved = 0
     mindset.cards = {}
     kitchen.cards = {}
+    kitchen.totalTasksCompleted = 0
     bakingColumn:refresh()
     local batch1 = gameCupcakeBatch.make(1)
     kitchen:insert(batch1)
     local batch2 = gameCupcakeBatch.make(2, batch1)
     kitchen:insert(batch2)
-    kitchen.totalTasksCompleted = 0
     morgan.value = 0
     alex.value = 0
     cupcakes.value = 0

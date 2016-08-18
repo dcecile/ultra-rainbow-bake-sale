@@ -154,6 +154,39 @@ local bakeTip = tip:extend({
   end,
 })
 
+local morganTip = tip:extend({
+  text = "Morgan’s secret ability",
+  description =
+    'Using this secret ability will\n'
+    .. 'let Morgan pay the cost\n'
+    .. 'of a card from inspiration,\n'
+    .. 'and put it directly into the\n'
+    .. 'hand.',
+  isValid = function (self)
+    return hope.value >= 4 and morgan:isClickable()
+      and kitchen.totalTasksCompleted >= 2 and kitchen.totalTasksCompleted <= 4
+  end,
+  isHighlighted = function (card)
+    return card == morgan or card.isBuyable and card:isBuyable()
+  end,
+})
+
+local alexTip = tip:extend({
+  text = "Alex’s secret ability",
+  description =
+    'Using this secret ability will\n'
+    .. 'let Alex try to put a copy of\n'
+    .. 'the selected mindset from\n'
+    .. 'the hand, deck, or discard\n'
+    .. 'into play. Then draw 1 card.',
+  isValid = function (self)
+    return not any(findRunnableCards(1)) and alex:isClickable()
+  end,
+  isHighlighted = function (card)
+    return card == alex or card.column == mindset
+  end,
+})
+
 local findHopeTip = tip:extend({
   text = 'Find more hope',
   description =
@@ -190,12 +223,14 @@ local endTurnTip = tip:extend({
 
 local allTips = {
   expertTip,
+  morganTip,
   letGoEnnuiTip,
   useMindsetTip,
   zeroHopeTip,
   playHopeTip,
   playMindsetTip,
   bakeTip,
+  alexTip,
   findHopeTip,
   endTurnTip,
   defaultTip,
